@@ -16,6 +16,7 @@ import {
   dataDir,
   getBitcoindBundle,
   mainMounts,
+  isOnion,
   peerPublicAddresses,
   sleep,
 } from './utils'
@@ -32,8 +33,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
   }
 
   // Distinguishes a Peer interface with no external address from one whose
-  // addresses eclair cannot announce.
+  // addresses eclair cannot announce, and whether a Tor address pins the port.
   const peerAddresses = await peerPublicAddresses(effects)
+
+  // What eclair will actually listen on and announce, as written by watchHosts.
+  const peerPort = conf['server.port']
 
   const maxHeapMib =
     (await storeJson.read((s) => s.maxHeapMib).const(effects)) ?? 1024
@@ -161,27 +165,62 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       requires: ['bitcoind-synced'],
     })
-    .addHealthCheck('reachability', () =>
-      conf['server.public-ips'].length
-        ? null
-        : {
-            ready: {
-              display: i18n('Node Reachability'),
-              // Nothing here initializes, so the default grace period would
-              // only show this as "starting" for its first 10 seconds.
-              gracePeriod: 0,
-              fn: () => ({
-                result: 'disabled' as const,
-                message: peerAddresses.length
-                  ? i18n(
-                      'Another Lightning service on this server is using the standard Lightning port, so peers cannot reach Eclair at your public address and it is not announced. Add a Tor address to your Peer interface to be reachable.',
-                    )
-                  : i18n(
-                      'Your node can open channels with other nodes, but they cannot open one with you. Enable a Tor address, a public domain, or a public IP on the Peer interface to be reachable.',
-                    ),
-              }),
-            },
-            requires: ['eclair'],
+    .addHealthCheck('reachability', () => {
+      const display = i18n('Node Reachability')
+      // Nothing here initializes, so the default grace period would only show
+      // this as "starting" for its first 10 seconds.
+      const gracePeriod = 0
+
+      // Clearnet addresses eclair cannot announce: reachable on a port other
+      // than the one it listens on. Onions are left out — Tor fixes an onion's
+      // port to the one it was created against, so it either matches or is the
+      // reason the port did not move, and which of those decides the message.
+      const stranded = peerAddresses.filter(
+        (a) => !isOnion(a) && a.port != null && a.port !== peerPort,
+      )
+      if (stranded.length) {
+        const [first] = stranded
+        const params = {
+          listening: String(peerPort),
+          assigned: String(first.port),
+          address: `${first.hostname}:${first.port}`,
+        }
+        // Not 'disabled': the user added a public address and it is not
+        // working. 'disabled' means the check does not apply.
+        const message = peerAddresses.some(isOnion)
+          ? i18n(
+              'Another service on this server holds port ${listening}, so StartOS assigned this interface external port ${assigned} and ${address} is not announced. Eclair stays on port ${listening} because your Tor address depends on it. To be reachable over clearnet, remove the Tor address from the Peer interface, wait for Eclair to move to a free port, then add a Tor address back — it will be a new .onion address.',
+              params,
+            )
+          : i18n(
+              'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. This normally corrects itself on the next start; if it persists, restart Eclair.',
+              params,
+            )
+        return {
+          ready: {
+            display,
+            gracePeriod,
+            fn: () => ({ result: 'failure' as const, message }),
           },
-    )
+          requires: ['eclair'],
+        }
+      }
+
+      // Reachable somewhere. Nothing to report.
+      if (conf['server.public-ips'].length) return null
+
+      return {
+        ready: {
+          display,
+          gracePeriod,
+          fn: () => ({
+            result: 'disabled' as const,
+            message: i18n(
+              'Your node can open channels with other nodes, but they cannot open one with you. Enable a Tor address, a public domain, or a public IP on the Peer interface to be reachable.',
+            ),
+          }),
+        },
+        requires: ['eclair'],
+      }
+    })
 })

@@ -9,7 +9,40 @@ import {
 import { sdk } from './sdk'
 
 export const apiPort = 8080
-export const peerPort = 9735
+
+/**
+ * The Lightning standard peer port, and the first port this package asks
+ * StartOS to assign the Peer interface. It is a preference, not a guarantee —
+ * see `bindPeerPort` in interfaces.ts.
+ */
+export const defaultPeerPort = 9735
+
+/**
+ * The band a replacement peer port is drawn from. The lower bound is the first
+ * port an unprivileged claimant may take (StartOS refuses <= 1024); the upper
+ * bound stops one short of StartOS's own ephemeral range, whose ports it hands
+ * out at random to anyone who doesn't ask for a specific number — a candidate
+ * drawn from in there would be racing those allocations.
+ */
+const peerPortMin = 1025
+const peerPortMax = 49151
+
+/**
+ * A fresh candidate peer port, excluding any already tried. Uniform over a
+ * ~48,000-port band against the handful a server actually uses, so the first
+ * draw is granted except on a pathologically crowded box. Never this package's
+ * own API port: ports are container-local, and eclair binding both on one
+ * number fails to start. Anything StartOS itself won't grant simply comes back
+ * refused and is redrawn.
+ */
+export const pickPeerPort = (exclude: readonly number[] = []): number => {
+  const span = peerPortMax - peerPortMin + 1
+  for (let i = 0; i < 100; i++) {
+    const port = peerPortMin + Math.floor(Math.random() * span)
+    if (port !== apiPort && !exclude.includes(port)) return port
+  }
+  throw new Error('could not find an untried peer port candidate')
+}
 
 export const apiHostId = 'api'
 export const peerHostId = 'peer'
@@ -67,36 +100,62 @@ export const getBitcoindBundle = async (effects: T.Effects) => {
   }
 }
 
+const peerInterface = (
+  host: Parameters<Parameters<typeof sdk.host.getOwn>[2]>[0],
+) =>
+  host &&
+  Object.values(host.bindings)
+    .flatMap((b) => Object.values(b.interfaces))
+    .find((i) => i.id === peerInterfaceId)
+
+/** A Tor address the Tor package published for the interface. */
+export const isOnion = (a: T.HostnameInfo) =>
+  a.metadata.kind === 'plugin' && a.metadata.packageId === 'tor'
+
 /**
- * The Peer interface's externally reachable addresses, each `host:port`, with
- * StartOS domains dropped — eclair accepts at most one DNS hostname and refuses
- * to start on a second.
+ * The Peer interface's externally reachable addresses, with StartOS domains
+ * dropped — eclair accepts at most one DNS hostname and refuses to start on a
+ * second.
  */
 export const peerPublicAddresses = (effects: T.Effects) =>
   sdk.host
     .getOwn(effects, peerHostId, (host) => {
-      const iface =
-        host &&
-        Object.values(host.bindings)
-          .flatMap((b) => Object.values(b.interfaces))
-          .find((i) => i.id === peerInterfaceId)
+      const iface = peerInterface(host)
       if (!iface) return []
       return iface.addressInfo.public
         .filter({ exclude: { kind: 'domain' } })
-        .format()
+        .format('hostname-info')
+    })
+    .const()
+
+/**
+ * Whether the Peer interface carries a Tor address. A boolean, so a caller
+ * re-runs only when an onion appears or disappears, not on every address edit.
+ */
+export const peerHasOnion = (effects: T.Effects) =>
+  sdk.host
+    .getOwn(effects, peerHostId, (host) => {
+      const iface = peerInterface(host)
+      return (
+        !!iface &&
+        iface.addressInfo.public
+          .filter({ predicate: isOnion })
+          .format('hostname-info').length > 0
+      )
     })
     .const()
 
 /**
  * Eclair appends `server.port` to every entry of `server.public-ips`, so an
- * address reachable on any other port would be announced wrong. Tor maps the
- * onion's virtual port itself and always matches; a clearnet address matches
- * only while StartOS has granted the Peer interface external port 9735.
+ * address reachable on any other port would be announced wrong; it is dropped
+ * instead. `peerPort` is the port eclair both listens on and announces. Once
+ * `bindPeerPort` has matched it to the external port StartOS granted, every
+ * address passes; one that does not is what Node Reachability reports.
  */
-export const announceable = (addresses: string[]) =>
-  addresses
-    .filter((a) => a.endsWith(`:${peerPort}`))
-    .map((a) => a.slice(0, a.lastIndexOf(':')))
+export const announceable = (
+  addresses: readonly T.HostnameInfo[],
+  peerPort: number,
+) => addresses.filter((a) => a.port === peerPort).map((a) => a.hostname)
 
 export type BitcoindRpc = {
   url: string

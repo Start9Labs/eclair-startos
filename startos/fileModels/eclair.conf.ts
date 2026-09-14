@@ -1,7 +1,12 @@
 import { FileHelper, z } from '@start9labs/start-sdk'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { apiPort, bitcoindCookie, bitcoindWallet, peerPort } from '../utils'
+import {
+  apiPort,
+  bitcoindCookie,
+  bitcoindWallet,
+  defaultPeerPort,
+} from '../utils'
 
 const { InputSpec, Value } = sdk
 
@@ -54,7 +59,10 @@ export const shape = z.looseObject({
   // ──── Enforced by the package ────
   chain: z.literal('mainnet').catch('mainnet'),
   'server.binding-ip': z.literal('0.0.0.0').catch('0.0.0.0'),
-  'server.port': z.literal(peerPort).catch(peerPort),
+  // Not a fixed literal: eclair announces the port it listens on, so this
+  // tracks whichever external port StartOS granted the Peer interface. Settled
+  // by setInterfaces, written by watchHosts.
+  'server.port': z.number().int().catch(defaultPeerPort),
   'api.enabled': z.literal(true).catch(true),
   'api.binding-ip': z.literal('0.0.0.0').catch('0.0.0.0'),
   'api.port': z.literal(apiPort).catch(apiPort),

@@ -1,6 +1,7 @@
 import { socksHostId, socksPort } from 'tor-startos/startos/utils'
 import { eclairConf } from '../fileModels/eclair.conf'
-import { announceable, peerPublicAddresses } from '../utils'
+import { storeJson } from '../fileModels/store.json'
+import { announceable, defaultPeerPort, peerPublicAddresses } from '../utils'
 import { sdk } from '../sdk'
 
 export const watchHosts = sdk.setupOnInit(async (effects) => {
@@ -17,7 +18,12 @@ export const watchHosts = sdk.setupOnInit(async (effects) => {
     })
     .const()
 
-  const publicIps = announceable(await peerPublicAddresses(effects))
+  // The port setInterfaces settled on. Eclair listens on it and announces it,
+  // and only addresses reachable there can go in `server.public-ips`.
+  const peerPort =
+    (await storeJson.read((s) => s.peerPort).const(effects)) ?? defaultPeerPort
+
+  const publicIps = announceable(await peerPublicAddresses(effects), peerPort)
 
   await eclairConf.merge(
     effects,
@@ -25,6 +31,7 @@ export const watchHosts = sdk.setupOnInit(async (effects) => {
       'socks5.enabled': true,
       'socks5.host': socks?.split(':')[0],
       'socks5.port': socks ? Number(socks.split(':')[1]) : undefined,
+      'server.port': peerPort,
       'server.public-ips': [...new Set(publicIps)],
     },
     { allowWriteAfterConst: true },

@@ -5,7 +5,7 @@ const dict = {
   Alias: 1,
   'Announce Channels': 2,
   'Announce new channels to the Lightning Network so others can route payments through your node. Turn this off to run an unannounced node whose channels stay private.': 3,
-  'Another Lightning service on this server is using the standard Lightning port, so peers cannot reach Eclair at your public address and it is not announced. Add a Tor address to your Peer interface to be reachable.': 4,
+  'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. This normally corrects itself on the next start; if it persists, restart Eclair.': 4,
   'Block Height': 5,
   'Ceiling on the feerate used to reclaim funds that are not at risk when a channel closes. Closing transactions will not confirm while the mempool demands more than this, so raise it when you need the funds back in a hurry.': 6,
   'Ceiling on the feerate used for funding and splice transactions. This protects against inaccurate fee estimates, but opens and splices will not confirm when the mempool demands more. Raise it or use RBF when they stall.': 91,
@@ -93,6 +93,7 @@ const dict = {
   ppm: 87,
   satoshis: 88,
   'sats/vB': 89,
+  'Another service on this server holds port ${listening}, so StartOS assigned this interface external port ${assigned} and ${address} is not announced. Eclair stays on port ${listening} because your Tor address depends on it. To be reachable over clearnet, remove the Tor address from the Peer interface, wait for Eclair to move to a free port, then add a Tor address back — it will be a new .onion address.': 92,
 } as const
 
 /**
