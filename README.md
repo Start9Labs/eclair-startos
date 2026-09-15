@@ -128,7 +128,7 @@ Every action is user-facing; the package declares no hidden actions. The Configu
 
 **Routing Fees** (`routing-fees`) — What you charge to forward payments, separately for announced and unannounced channels. Eclair applies a fee change to existing channels when it restarts. Instant, repeatable, applied on the next restart.
 
-**On-Chain Fees** (`on-chain-fees`) — How fast funding and closing transactions should confirm, and the ceiling on the fee rate used to reclaim funds that are not at risk when a channel closes. That ceiling is the setting to raise when closing transactions are not confirming and you need the money back; Eclair re-bids the transaction at the new rate after a restart. Instant, repeatable, applied on the next restart.
+**On-Chain Fees** (`on-chain-fees`) — How fast funding and closing transactions should confirm, plus separate feerate ceilings for funding/splice transactions and for reclaiming funds that are not at risk during a close. The funding ceiling protects against inaccurate fee estimates; raise it or use RBF when a channel open or splice stalls. Raise the closing ceiling when a closing transaction is not confirming and you need the money back; Eclair re-bids the transaction at the new rate after a restart. Instant, repeatable, applied on the next restart.
 
 **Channel Settings** (`channels`) — The smallest and largest channels the node will accept, how many payments may be in flight per direction, and what to do about coins left locked by an interrupted channel funding. The last of these is the one that matters during an incident: the default refuses to start until the coins are unlocked, and switching it to Unlock lets Eclair release them itself. Instant, repeatable, applied on the next restart.
 

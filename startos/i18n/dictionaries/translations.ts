@@ -92,6 +92,8 @@ export default {
     87: 'ppm',
     88: 'satoshis',
     89: 'sats/vB',
+    90: 'Tarifa máxima de financiación',
+    91: 'Límite máximo de la tasa de comisión utilizada para transacciones de financiación y empalme. Esto protege contra estimaciones de tarifas inexactas, pero las aperturas y los empalmes no se confirmarán cuando la mempool exija más. Súbelo o usa RBF cuando se atasquen.',
   },
   de_DE: {
     0: 'API',
@@ -184,6 +186,8 @@ export default {
     87: 'ppm',
     88: 'Satoshi',
     89: 'sats/vB',
+    90: 'Maximale Finanzierungsgebührenrate',
+    91: 'Obergrenze der Gebührenrate für Finanzierungs- und Splice-Transaktionen. Dies schützt vor ungenauen Gebührenschätzungen, aber Öffnungen und Splices werden nicht bestätigt, wenn der Mempool mehr verlangt. Erhöhen Sie den Wert oder verwenden Sie RBF, wenn sie feststecken.',
   },
   pl_PL: {
     0: 'API',
@@ -276,6 +280,8 @@ export default {
     87: 'ppm',
     88: 'satoshi',
     89: 'sats/vB',
+    90: 'Maksymalna stawka opłaty finansowania',
+    91: 'Górny limit stawki opłaty dla transakcji finansowania i splice. Chroni to przed niedokładnymi szacunkami opłat, ale otwarcia i splice nie zostaną potwierdzone, gdy mempool wymaga więcej. Podnieś limit lub użyj RBF, gdy utkną.',
   },
   fr_FR: {
     0: 'API',
@@ -368,5 +374,7 @@ export default {
     87: 'ppm',
     88: 'satoshis',
     89: 'sats/vB',
+    90: 'Taux de frais maximal au financement',
+    91: 'Plafond du taux de frais utilisé pour les transactions de financement et de splice. Il protège contre les estimations de frais inexactes, mais les ouvertures et les splices ne seront pas confirmés si le mempool exige davantage. Augmentez-le ou utilisez RBF s’ils restent bloqués.',
   },
 } satisfies Record<string, LangDict>
