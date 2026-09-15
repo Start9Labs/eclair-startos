@@ -23,10 +23,11 @@ export const onChainFees = sdk.Action.withInput(
     'on-chain-fees.confirmation-priority.funding': true,
     'on-chain-fees.confirmation-priority.closing': true,
     'on-chain-fees.max-closing-feerate': true,
+    'on-chain-fees.max-funding-feerate': true,
   }),
 
   // optionally pre-fill the input form
-  async ({ effects }) => (await eclairConf.read().const(effects)) ?? undefined,
+  async ({ effects }) => (await eclairConf.read().once()) ?? undefined,
 
   // the execution function
   async ({ effects, input }) => eclairConf.merge(effects, input),

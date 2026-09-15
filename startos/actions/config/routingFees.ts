@@ -27,7 +27,7 @@ export const routingFees = sdk.Action.withInput(
   }),
 
   // optionally pre-fill the input form
-  async ({ effects }) => (await eclairConf.read().const(effects)) ?? undefined,
+  async ({ effects }) => (await eclairConf.read().once()) ?? undefined,
 
   // the execution function
   async ({ effects, input }) => eclairConf.merge(effects, input),

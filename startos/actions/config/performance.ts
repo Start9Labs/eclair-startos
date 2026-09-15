@@ -34,7 +34,7 @@ export const performance = sdk.Action.withInput(
   }),
 
   // optionally pre-fill the input form
-  async ({ effects }) => (await storeJson.read().const(effects)) ?? undefined,
+  async ({ effects }) => (await storeJson.read().once()) ?? undefined,
 
   // the execution function
   async ({ effects, input }) => storeJson.merge(effects, input),

@@ -45,7 +45,7 @@ The same interface carries a WebSocket at `/ws` that pushes an event whenever yo
 - **Node Info** — your node's public key, alias, block height and the URIs peers can reach you at.
 - **General Settings** — your node's name and color, whether new channels are announced to the network, and trampoline relaying. An unannounced node can still send and receive; it just won't be routed through by strangers.
 - **Routing Fees** — what you charge to forward other people's payments.
-- **On-Chain Fees** — how quickly you want channel openings and closings to confirm. If a channel close is stuck unconfirmed, raise **Maximum Closing Feerate** here and restart; Eclair will re-bid the transaction at the higher rate.
+- **On-Chain Fees** — how quickly you want channel openings and closings to confirm. **Maximum Funding Feerate** protects channel opens and splices from inaccurate fee estimates; raise it or use RBF when one stalls. If a channel close is stuck unconfirmed, raise **Maximum Closing Feerate** and restart; Eclair will re-bid the transaction at the higher rate.
 - **Channel Settings** — the smallest and largest channels you will accept, and what to do about coins left locked by a channel opening that was interrupted. If Eclair refuses to start and complains about locked coins, set that to **Unlock** and restart.
 - **Performance** — how much memory Eclair may use. Raise it if Eclair stops with an out-of-memory error; a node with many channels needs more than the default.
 

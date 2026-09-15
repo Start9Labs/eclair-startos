@@ -100,6 +100,7 @@ export const shape = z.looseObject({
     .enum(['slow', 'medium', 'fast'])
     .catch('medium'),
   'on-chain-fees.max-closing-feerate': formNumber,
+  'on-chain-fees.max-funding-feerate': formNumber,
 
   // ──── Channels ────
   'channel.min-public-funding-satoshis': formNumber,
@@ -234,6 +235,18 @@ export const fullConfigSpec = InputSpec.of({
     integer: true,
     units: i18n('sats/vB'),
     footnote: `${i18n('Default')}: 10`,
+  }),
+  'on-chain-fees.max-funding-feerate': Value.number({
+    name: i18n('Maximum Funding Feerate'),
+    description: i18n(
+      'Ceiling on the feerate used for funding and splice transactions. This protects against inaccurate fee estimates, but opens and splices will not confirm when the mempool demands more. Raise it or use RBF when they stall.',
+    ),
+    required: false,
+    default: null,
+    min: 1,
+    integer: true,
+    units: i18n('sats/vB'),
+    footnote: `${i18n('Default')}: 50`,
   }),
   'channel.min-public-funding-satoshis': Value.number({
     name: i18n('Minimum Announced Channel Size'),

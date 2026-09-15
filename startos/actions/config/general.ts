@@ -26,7 +26,7 @@ export const general = sdk.Action.withInput(
 
   // optionally pre-fill the input form
   async ({ effects }) => {
-    const conf = await eclairConf.read().const(effects)
+    const conf = await eclairConf.read().once()
     if (!conf) return undefined
     return { ...conf, 'node-color': `#${conf['node-color']}` }
   },
