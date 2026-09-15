@@ -50,7 +50,7 @@ const optionalNumber = z.number().optional().catch(undefined)
 // writing a HOCON null, which unsets the key instead of leaving it at default.
 const formNumber = z.number().nullable().catch(null)
 
-export const shape = z.object({
+export const shape = z.looseObject({
   // ──── Enforced by the package ────
   chain: z.literal('mainnet').catch('mainnet'),
   'server.binding-ip': z.literal('0.0.0.0').catch('0.0.0.0'),
