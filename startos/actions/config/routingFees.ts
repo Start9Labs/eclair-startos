@@ -3,9 +3,11 @@ import { i18n } from '../../i18n'
 import { sdk } from '../../sdk'
 
 export const routingFees = sdk.Action.withInput(
+  // id
   'routing-fees',
 
-  async () => ({
+  // metadata
+  async ({ effects }) => ({
     name: i18n('Routing Fees'),
     description: i18n(
       'What you charge to route payments through your channels',
@@ -16,6 +18,7 @@ export const routingFees = sdk.Action.withInput(
     visibility: 'enabled',
   }),
 
+  // form input specification
   fullConfigSpec.filter({
     'relay.fees.public-channels.fee-base-msat': true,
     'relay.fees.public-channels.fee-proportional-millionths': true,
@@ -23,7 +26,9 @@ export const routingFees = sdk.Action.withInput(
     'relay.fees.private-channels.fee-proportional-millionths': true,
   }),
 
-  async () => (await eclairConf.read().once()) ?? undefined,
+  // optionally pre-fill the input form
+  async ({ effects }) => (await eclairConf.read().once()) ?? undefined,
 
+  // the execution function
   async ({ effects, input }) => eclairConf.merge(effects, input),
 )

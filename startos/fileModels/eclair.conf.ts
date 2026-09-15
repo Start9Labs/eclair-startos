@@ -46,10 +46,12 @@ function nest(value: Record<string, unknown>): Record<string, unknown> {
 
 const optionalString = z.string().optional().catch(undefined)
 const optionalNumber = z.number().optional().catch(undefined)
-// `nest` drops a cleared form number instead of writing a HOCON null.
+// A form's optional number is `null` when cleared; `nest` drops it rather than
+// writing a HOCON null, which unsets the key instead of leaving it at default.
 const formNumber = z.number().nullable().catch(null)
 
 export const shape = z.object({
+  // ──── Enforced by the package ────
   chain: z.literal('mainnet').catch('mainnet'),
   'server.binding-ip': z.literal('0.0.0.0').catch('0.0.0.0'),
   'server.port': z.literal(peerPort).catch(peerPort),
@@ -66,6 +68,7 @@ export const shape = z.object({
   // value that makes no outbound request.
   'blockchain-watchdog.sources': z.tuple([]).catch([]),
 
+  // ──── Resolved from dependencies at init ────
   'bitcoind.host': optionalString,
   'bitcoind.rpcport': optionalNumber,
   'bitcoind.zmqblock': optionalString,
@@ -75,17 +78,21 @@ export const shape = z.object({
   'socks5.port': optionalNumber,
   'server.public-ips': z.array(z.string()).catch([]),
 
+  // ──── Credential ────
   'api.password': z.string().catch(''),
 
+  // ──── General ────
   'node-alias': z.string().catch('eclair'),
   'node-color': z.string().catch('49daaa'),
   'channel.channel-flags.announce-channel': z.boolean().catch(true),
 
+  // ──── Routing fees ────
   'relay.fees.public-channels.fee-base-msat': formNumber,
   'relay.fees.public-channels.fee-proportional-millionths': formNumber,
   'relay.fees.private-channels.fee-base-msat': formNumber,
   'relay.fees.private-channels.fee-proportional-millionths': formNumber,
 
+  // ──── On-chain fees ────
   'on-chain-fees.confirmation-priority.funding': z
     .enum(['slow', 'medium', 'fast'])
     .catch('medium'),
@@ -95,6 +102,7 @@ export const shape = z.object({
   'on-chain-fees.max-closing-feerate': formNumber,
   'on-chain-fees.max-funding-feerate': formNumber,
 
+  // ──── Channels ────
   'channel.min-public-funding-satoshis': formNumber,
   'channel.min-private-funding-satoshis': formNumber,
   'channel.max-funding-satoshis': formNumber,

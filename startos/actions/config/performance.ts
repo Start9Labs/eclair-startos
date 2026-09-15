@@ -5,9 +5,11 @@ import { sdk } from '../../sdk'
 const { InputSpec, Value } = sdk
 
 export const performance = sdk.Action.withInput(
+  // id
   'performance',
 
-  async () => ({
+  // metadata
+  async ({ effects }) => ({
     name: i18n('Performance'),
     description: i18n('How much memory Eclair may use'),
     warning: null,
@@ -16,6 +18,7 @@ export const performance = sdk.Action.withInput(
     visibility: 'enabled',
   }),
 
+  // form input specification
   InputSpec.of({
     maxHeapMib: Value.number({
       name: i18n('Maximum Heap Size'),
@@ -30,7 +33,9 @@ export const performance = sdk.Action.withInput(
     }),
   }),
 
-  async () => (await storeJson.read().once()) ?? undefined,
+  // optionally pre-fill the input form
+  async ({ effects }) => (await storeJson.read().once()) ?? undefined,
 
+  // the execution function
   async ({ effects, input }) => storeJson.merge(effects, input),
 )
