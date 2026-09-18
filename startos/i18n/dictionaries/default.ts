@@ -113,7 +113,7 @@ const dict = {
   'Pay Invoice': 109,
   'Pay a Lightning invoice from this node.': 110,
   Invoice: 111,
-  'A BOLT11 payment request.': 112,
+  'A Lightning invoice.': 112,
   'As stated in the invoice': 113,
   'Most invoices state their amount; enter one only when the invoice leaves it open.': 114,
   'Maximum fee': 115,
