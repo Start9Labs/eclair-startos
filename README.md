@@ -138,7 +138,9 @@ Every action but one is user-facing. The Configuration group writes `eclair.conf
 
 **Node Info** (`node-info`) — Reads the node's public key, alias, connectable URIs and processed block height from the running node. Read-only, instant, repeatable. Use it to get the URI a peer needs to open a channel with you; the URI list is empty until the peer interface has a public address.
 
-**Pay Invoice** (`pay-invoice`) — Pays a BOLT11 invoice from the node's own funds: paste the invoice, whether its amount is stated in it or entered here — an invoice that leaves the amount open requires one, one that states it refuses one — and the most it may spend in routing fees as a percentage. It decodes the invoice first (`parseinvoice`), then pays through the API's blocking `payinvoice`, and returns the amount, fee, description, destination and preimage; a failure returns Eclair's reason. Only while running. Not idempotent — running it twice pays twice if the invoice allows it, which a single-use BOLT11 does not. A companion service can raise it as a task with the invoice filled in, so a payment it needs is one prompt the user accepts; the node never hands out its API password for it.
+**Pay Invoice** (`pay-invoice`) — Grouped under Payments. Pays a BOLT11 invoice from the node's own funds: paste the invoice, whether its amount is stated in it or entered here — an invoice that leaves the amount open requires one, one that states it refuses one — and the most it may spend in routing fees as a percentage. It decodes the invoice first (`parseinvoice`), then pays through the API's blocking `payinvoice`, and returns the amount, fee, description, destination and preimage; a failure returns Eclair's reason. Only while running. Not idempotent — running it twice pays twice if the invoice allows it, which a single-use BOLT11 does not. A companion service can raise it as a task with the invoice filled in, so a payment it needs is one prompt the user accepts; the node never hands out its API password for it.
+
+**Receive Payment** (`receive-payment`) — Creates a BOLT11 invoice for this node: an optional amount (none makes an amount-less invoice the payer fills in), an optional description carried in the invoice, and an expiry in hours, default 24. Calls the API's `createinvoice` and returns the invoice as text and QR code, plus the payment hash. Only while running. Safe to repeat — each run registers a new invoice and nothing is charged. Grouped with Pay Invoice under Payments.
 
 **General Settings** (`general`) — Alias, color, whether new channels are announced, and trampoline relaying. Announcing is what makes your node routable by strangers; turning it off leaves existing announced channels announced. Instant, repeatable, applied on the next restart.
 
@@ -228,6 +230,7 @@ actions:
   - set-api-password
   - node-info
   - pay-invoice # only-running; a companion service may raise it as a task
+  - receive-payment # only-running
   - general
   - routing-fees
   - on-chain-fees

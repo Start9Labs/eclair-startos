@@ -7,12 +7,14 @@ import { performance } from './config/performance'
 import { routingFees } from './config/routingFees'
 import { nodeInfo } from './nodeInfo'
 import { payInvoice } from './payInvoice'
+import { receivePayment } from './receivePayment'
 import { setApiPassword } from './setApiPassword'
 
 export const actions = sdk.Actions.of()
   .addAction(setApiPassword)
   .addAction(nodeInfo)
   .addAction(payInvoice)
+  .addAction(receivePayment)
   .addAction(general)
   .addAction(routingFees)
   .addAction(onChainFees)

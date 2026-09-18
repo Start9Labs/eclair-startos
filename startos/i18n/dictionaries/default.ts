@@ -131,6 +131,17 @@ const dict = {
   'Enter an amount': 127,
   'Amount to pay': 128,
   'This invoice already carries an amount of ${amount} sats; select "As stated in the invoice".': 129,
+  Payments: 130,
+  'Receive Payment': 131,
+  'Create a Lightning invoice for this node to be paid.': 132,
+  'Leave empty to let the payer choose the amount.': 133,
+  'Shown to the payer in their wallet.': 134,
+  'Expires in': 135,
+  'The invoice could not be created: ${error}': 136,
+  'Invoice created': 137,
+  'Payable for ${hours} hours.': 138,
+  'Any amount': 139,
+  'Payment hash': 140,
 } as const
 
 /**

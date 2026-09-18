@@ -2,7 +2,7 @@ import { T } from '@start9labs/start-sdk'
 import { eclairConf } from '../fileModels/eclair.conf'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { apiPort } from '../utils'
+import { apiError, eclairApi, row, sats } from './payments'
 
 const { InputSpec, Value, Variants } = sdk
 
@@ -78,9 +78,6 @@ type PaymentResult = {
   }[]
 }
 
-const sats = (msat: number | undefined) =>
-  msat === undefined ? '' : String(Math.floor(msat / 1000))
-
 export const payInvoice = sdk.Action.withInput(
   'pay-invoice',
   async ({ effects }) => ({
@@ -88,25 +85,14 @@ export const payInvoice = sdk.Action.withInput(
     description: i18n('Pay a Lightning invoice from this node.'),
     warning: null,
     allowedStatuses: 'only-running',
-    group: null,
+    group: i18n('Payments'),
     visibility: 'enabled',
   }),
   inputSpec,
   async ({ effects }) => ({}),
   async ({ effects, input }): Promise<T.ActionResult & { version: '1' }> => {
     const password = await eclairConf.read((c) => c['api.password']).once()
-    const call = async (method: string, params: Record<string, string>) => {
-      const res = await fetch(`http://127.0.0.1:${apiPort}/${method}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`:${password}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(params),
-      })
-      const text = await res.text()
-      return { ok: res.ok, text }
-    }
+    const call = eclairApi(password)
     const invoice = input.invoice.trim()
 
     const parsed = await call('parseinvoice', { invoice })
@@ -160,15 +146,6 @@ export const payInvoice = sdk.Action.withInput(
       (result.parts ?? []).reduce((sum, p) => sum + (p.feesPaid ?? 0), 0),
     )
     const destination = result.recipientNodeId ?? decoded.nodeId
-    const row = (name: string, value: string, copyable: boolean) => ({
-      name,
-      description: null,
-      copyable,
-      qr: false,
-      masked: false,
-      type: 'single' as const,
-      value,
-    })
     return {
       version: '1' as const,
       title: i18n('Payment sent'),
@@ -191,10 +168,3 @@ export const payInvoice = sdk.Action.withInput(
 )
 
 // Eclair's API answers an error with a JSON `error` field; anything else is passed through.
-function apiError(text: string): string {
-  try {
-    return String(JSON.parse(text).error ?? text).replace(/\s+/g, ' ')
-  } catch {
-    return text.trim() || 'unknown'
-  }
-}
