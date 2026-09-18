@@ -48,7 +48,7 @@ The same interface carries a WebSocket at `/ws` that pushes an event whenever yo
 
 - **Set API Password** — generates your API password, and generates a new one whenever you want to cut off everything currently connected. Restart Eclair afterwards for the change to take effect.
 - **Node Info** — your node's public key, alias, block height and the URIs peers can reach you at.
-- **Pay Invoice** — pays a Lightning invoice from your node without a wallet app: paste it, set the most you are willing to pay in routing fees, and confirm. The result shows what was paid and the preimage. A service that needs a payment from you can raise the same prompt with the invoice filled in.
+- **Pay Invoice** — pays a Lightning invoice from your node without a wallet app: paste it, enter an amount only if the invoice leaves it open, set the most you are willing to pay in routing fees, and confirm. The result shows what was paid and the preimage. A service that needs a payment from you can raise the same prompt with the invoice filled in.
 - **General Settings** — your node's name and color, whether new channels are announced to the network, and trampoline relaying. An unannounced node can still send and receive; it just won't be routed through by strangers.
 - **Routing Fees** — what you charge to forward other people's payments.
 - **On-Chain Fees** — how quickly you want channel openings and closings to confirm. **Maximum Funding Feerate** protects channel opens and splices from inaccurate fee estimates; raise it or use RBF when one stalls. If a channel close is stuck unconfirmed, raise **Maximum Closing Feerate** and restart; Eclair will re-bid the transaction at the higher rate.

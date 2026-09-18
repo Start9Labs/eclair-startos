@@ -114,12 +114,12 @@ const dict = {
   'Pay a Lightning invoice from this node.': 110,
   Invoice: 111,
   'A BOLT11 payment request.': 112,
-  'Amount (sats)': 113,
-  'Only for an invoice that carries no amount.': 114,
-  'Maximum fee (%)': 115,
+  'As stated in the invoice': 113,
+  'Most invoices state their amount; enter one only when the invoice leaves it open.': 114,
+  'Maximum fee': 115,
   'The most this node may pay in routing fees, as a percentage of the amount.': 116,
   'The invoice could not be decoded: ${error}': 117,
-  'This invoice carries no amount; enter one.': 118,
+  'This invoice carries no amount; select "Enter an amount".': 118,
   'Payment failed: ${reason}': 119,
   'Payment sent': 120,
   'Paid ${amount} sats to ${destination}.': 121,
@@ -128,6 +128,9 @@ const dict = {
   Description: 124,
   Destination: 125,
   Preimage: 126,
+  'Enter an amount': 127,
+  'Amount to pay': 128,
+  'This invoice already carries an amount of ${amount} sats; select "As stated in the invoice".': 129,
 } as const
 
 /**
