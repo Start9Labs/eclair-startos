@@ -1,4 +1,5 @@
 import { sdk } from '../sdk'
+import { clearnetVpn } from './clearnetVpn'
 import { channels } from './config/channels'
 import { general } from './config/general'
 import { onChainFees } from './config/onChainFees'
@@ -15,3 +16,4 @@ export const actions = sdk.Actions.of()
   .addAction(onChainFees)
   .addAction(channels)
   .addAction(performance)
+  .addAction(clearnetVpn)

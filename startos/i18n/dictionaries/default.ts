@@ -95,6 +95,21 @@ const dict = {
   'sats/vB': 89,
   'Another service on this server holds port ${listening}, so StartOS assigned this interface external port ${assigned} and ${address} is not announced. Eclair keeps its port because your Tor address depends on it. To be reachable over clearnet, remove the Tor address from the Peer interface, wait for Eclair to move to a free port, then add a Tor address back — it will be a new .onion address.': 92,
   'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. Eclair is keeping its port for the Tor address in its backup. Restore Tor from the same backup to bring that address back, or restart the server to let Eclair move to a free port.': 93,
+  'Clearnet VPN': 94,
+  "Route this node's clearnet traffic through a WireGuard tunnel and advertise the tunnel's public address.": 95,
+  'WireGuard Configuration': 96,
+  'The WireGuard client configuration for the tunnel. Leave it empty to turn the VPN off.': 97,
+  'Public Address': 98,
+  'The address peers reach this node at through the tunnel, as host:port. Eclair listens on that port and announces it.': 99,
+  'Unrecognized line in the WireGuard configuration: ${line}': 100,
+  'The WireGuard configuration needs a PrivateKey and an Address under [Interface].': 101,
+  'The WireGuard configuration needs exactly one [Peer] with a PublicKey and an Endpoint.': 102,
+  'AllowedIPs must include 0.0.0.0/0 so that all clearnet traffic uses the tunnel.': 103,
+  'The public address must be host:port.': 104,
+  'The public address host does not resolve: ${host}': 105,
+  'Waiting for the first WireGuard handshake.': 106,
+  'No WireGuard handshake for ${minutes} minutes. Clearnet traffic is held until the tunnel returns, not sent over your ISP connection.': 107,
+  'Tunnel up; last handshake ${seconds}s ago.': 108,
 } as const
 
 /**

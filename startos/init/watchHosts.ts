@@ -23,7 +23,13 @@ export const watchHosts = sdk.setupOnInit(async (effects) => {
   const peerPort =
     (await storeJson.read((s) => s.peerPort).const(effects)) ?? defaultPeerPort
 
-  const publicIps = announceable(await peerPublicAddresses(effects), peerPort)
+  // A tunnel's public IP stands in for this server's own addresses: announcing both hands peers the home IP the tunnel exists to hide.
+  const tunnelIp = await storeJson
+    .read((s) => s.clearnetVpn?.announceIp ?? null)
+    .const(effects)
+  const publicIps = tunnelIp
+    ? [tunnelIp]
+    : announceable(await peerPublicAddresses(effects), peerPort)
 
   await eclairConf.merge(
     effects,
