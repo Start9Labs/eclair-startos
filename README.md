@@ -77,7 +77,7 @@ Three groups of keys behave differently, and the difference is what "why did my 
 - **Resolved from dependencies on every start.** `bitcoind.host`, `bitcoind.rpcport`, `bitcoind.zmqblock`, `bitcoind.zmqtx`, `socks5.*` and `server.public-ips`. These are addresses StartOS assigns; editing them by hand is pointless because the next start recomputes them. When Bitcoin is not installed the keys are omitted rather than filled with a placeholder.
 - **Owned by the user through actions, and preserved.** Everything the Configuration actions expose — alias, color, routing fees, on-chain fee policy, channel limits — plus `api.password`. A hand edit to one of these survives, because the model only supplies a default when the key is absent or unparseable. Any key the model does not name is preserved verbatim, so an advanced setting added by hand stays put.
 
-`startos-store.json` holds StartOS-side state: the JVM heap ceiling, which has no `eclair.conf` equivalent because it is a `java` argument rather than an Eclair setting, and `peerPort`, the port `setInterfaces` settled on (see [Network Access and Interfaces](#network-access-and-interfaces)). `peerPort` is re-verified against the binding on every start, so a hand edit only holds if StartOS also grants that port.
+`startos-store.json` holds StartOS-side state: the JVM heap ceiling, which has no `eclair.conf` equivalent because it is a `java` argument rather than an Eclair setting, and `peerPort` and `peerOnion`, the port `setInterfaces` settled on and whether a Tor address pinned it (see [Network Access and Interfaces](#network-access-and-interfaces)). `peerPort` is re-verified against the binding on every start, so a hand edit only holds if StartOS also grants that port.
 
 ## Dependencies
 
@@ -97,9 +97,9 @@ The package creates a Bitcoin Core wallet named `eclair` before starting the dae
 
 Two interfaces, neither of them a web interface — Eclair does not have one.
 
-| Interface | Type  | Port | Protocol | Purpose                                                                                |
-| --------- | ----- | ---- | -------- | -------------------------------------------------------------------------------------- |
-| `api`     | `api` | 8080 | HTTP     | The JSON API, and the WebSocket at `/ws` that streams payment events                   |
+| Interface | Type  | Port | Protocol | Purpose                                                                                 |
+| --------- | ----- | ---- | -------- | --------------------------------------------------------------------------------------- |
+| `api`     | `api` | 8080 | HTTP     | The JSON API, and the WebSocket at `/ws` that streams payment events                    |
 | `peer`    | `p2p` | 9735 | Raw TCP  | Incoming connections from Lightning peers — 19735 or 29735 when 9735 is held; see below |
 
 The API is the whole control surface: every client, dashboard and command line tool acts through it. It authenticates with HTTP Basic using an **empty username** and the API password.
@@ -115,6 +115,8 @@ When 9735 is already held, StartOS assigns an ephemeral external port instead, a
 A refused port stays refused for the life of the install — the binding it left behind keeps its own external-port claim, so asking for it again reclaims that claim rather than the port — which is why the settled port, not 9735, leads every later pass. It also means the node cannot be moved back onto 9735 later, even after the conflicting service is removed; that needs `retireBinding`, which the SDK this package builds against does not have. Should all three be refused — three services holding them by number — Eclair stays on 29735 unannounced and Node Reachability says so. Freeing one of them is not enough: Eclair's binding for that port already holds an ephemeral assignment and keeps it. Uninstalling releases every binding, so a backup, uninstall and restore settles afresh.
 
 **A Tor address pins the port.** Tor forwards an onion to the internal port it was created against and fixes the onion's virtual port there, so moving Eclair's listener would take the onion dark and out of the announcement — and re-adding it afterwards creates a new `.onion` address, because removing the last port mapping deletes the key material. With an onion on the Peer interface a refusal is accepted as-is: Eclair stays on its current port, Tor keeps working, and the Node Reachability check explains the trade if a clearnet address is enabled. Removing the onion lets the next pass move; an onion added afterwards is created against the new port and works.
+
+The onion cannot be seen on the first pass after a restore: the host is created empty, and Tor re-exports the address only once this package has bound — by which time a move would already have happened, stranding the onion on the old port's disabled binding. So every pass that can see the host records in `startos-store.json` whether the Peer interface carries a Tor address, the backup carries the record, and a pass that finds a host with no bindings yet pins on the record instead. If the onion never comes back — Tor was not restored, or its copy of the address is gone — Eclair stays on the stored port until the next container init (a server restart, or an update), when the host can be seen and the record is refreshed; Node Reachability says so in the meantime. A backup taken before the record existed restores as if it had no Tor address.
 
 The settled port is verified against the binding on every pass rather than trusted: `startos-store.json` travels with a backup, and a restore onto a server where that port is held settles again.
 
@@ -166,7 +168,7 @@ A check stuck on "starting" for much longer than that is usually one of three th
 
 With no external address at all, it reports `disabled` and asks for one. That is a prompt rather than a fault: a node with no external address still opens channels and routes payments, it just cannot be dialled, so nobody will open a channel with it.
 
-Where the Peer interface has a clearnet address on a port other than the one Eclair listens on, it reports `failure` and names both ports and the stranded address. `disabled` would be wrong here — the user added a public address and it is not working, which is not a check that fails to apply. Onions are left out of that comparison: Tor fixes an onion's port to the one it was created against, so it either matches or is the reason the port did not move, and which of those it is decides the message. With a Tor address present, the message says the port is pinned by it and spells out the trade — remove the Tor address, let Eclair move, add a Tor address back, and expect a new `.onion`. Without one, a stranded address that persists means every port in the list was refused; the message names the ports and points at Tor, and the remedy for clearnet is under [Network Access and Interfaces](#network-access-and-interfaces).
+Where the Peer interface has a clearnet address on a port other than the one Eclair listens on, it reports `failure` and names both ports and the stranded address. `disabled` would be wrong here — the user added a public address and it is not working, which is not a check that fails to apply. Onions are left out of that comparison: Tor fixes an onion's port to the one it was created against, so it either matches or is the reason the port did not move, and which of those it is decides the message. With a Tor address present, the message says the port is pinned by it and spells out the trade — remove the Tor address, let Eclair move, add a Tor address back, and expect a new `.onion`. Without one, and with the store recording a Tor address the backup had, the message says Eclair is holding the port for that address and offers the two ways out: restore Tor from the same backup, or restart the server. Without one and with no such record, a stranded address that persists means every port in the list was refused; the message names the ports and points at Tor, and the remedy for clearnet is under [Network Access and Interfaces](#network-access-and-interfaces).
 
 Nothing depending on Eclair is affected by the `failure`: BTCPay Server and LNbits both gate on the `eclair` health check, not this one.
 
@@ -178,7 +180,7 @@ The strategy is a whole-volume copy of `main`. StartOS stops the service before 
 
 Excluded: `network.sqlite` and its write-ahead files, which hold the gossip graph Eclair re-downloads from its peers, and the log files. Everything else is captured, including both seeds, the channel database and the audit history.
 
-A restored instance rebuilds the gossip graph on its own, which takes a while and makes payments fail to route until it is populated. It needs Bitcoin installed and synced before it will start.
+A restored instance rebuilds the gossip graph on its own, which takes a while and makes payments fail to route until it is populated. It needs Bitcoin installed and synced before it will start. A node that had a Tor address keeps its peer port for it, even where the new server cannot grant that port — see [Network Access and Interfaces](#network-access-and-interfaces).
 
 **On-chain funds are not in this backup.** They live in the `eclair` wallet inside Bitcoin's data directory, and Bitcoin's own backup is what captures them. Restoring Eclair alone onto a server whose Bitcoin node does not carry that wallet brings back the channels without the coins that funded them.
 

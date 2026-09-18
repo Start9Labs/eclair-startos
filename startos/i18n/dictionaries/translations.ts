@@ -94,7 +94,8 @@ export default {
     89: 'sats/vB',
     90: 'Tarifa máxima de financiación',
     91: 'Límite máximo de la tasa de comisión utilizada para transacciones de financiación y empalme. Esto protege contra estimaciones de tarifas inexactas, pero las aperturas y los empalmes no se confirmarán cuando la mempool exija más. Súbelo o usa RBF cuando se atasquen.',
-    92: 'Otro servicio en este servidor ocupa el puerto ${listening}, así que StartOS asignó a esta interfaz el puerto externo ${assigned} y ${address} no se anuncia. Eclair se mantiene en el puerto ${listening} porque tu dirección Tor depende de él. Para ser accesible por clearnet, elimina la dirección Tor de la interfaz Par, espera a que Eclair pase a un puerto libre y vuelve a añadir una dirección Tor; será una dirección .onion nueva.',
+    92: 'Otro servicio en este servidor ocupa el puerto ${listening}, así que StartOS asignó a esta interfaz el puerto externo ${assigned} y ${address} no se anuncia. Eclair conserva su puerto porque tu dirección Tor depende de él. Para ser accesible por clearnet, elimina la dirección Tor de la interfaz Par, espera a que Eclair pase a un puerto libre y vuelve a añadir una dirección Tor; será una dirección .onion nueva.',
+    93: 'StartOS asignó a esta interfaz el puerto externo ${assigned}, pero Eclair escucha y anuncia el puerto ${listening}, así que ${address} no se anuncia. Eclair conserva su puerto por la dirección Tor de su copia de seguridad. Restaura Tor desde la misma copia de seguridad para recuperar esa dirección, o reinicia el servidor para que Eclair pase a un puerto libre.',
   },
   de_DE: {
     0: 'API',
@@ -189,7 +190,8 @@ export default {
     89: 'sats/vB',
     90: 'Maximale Finanzierungsgebührenrate',
     91: 'Obergrenze der Gebührenrate für Finanzierungs- und Splice-Transaktionen. Dies schützt vor ungenauen Gebührenschätzungen, aber Öffnungen und Splices werden nicht bestätigt, wenn der Mempool mehr verlangt. Erhöhen Sie den Wert oder verwenden Sie RBF, wenn sie feststecken.',
-    92: 'Ein anderer Dienst auf diesem Server belegt Port ${listening}, daher hat StartOS dieser Schnittstelle den externen Port ${assigned} zugewiesen und ${address} wird nicht angekündigt. Eclair bleibt auf Port ${listening}, weil Ihre Tor-Adresse davon abhängt. Um über das Clearnet erreichbar zu sein, entfernen Sie die Tor-Adresse von der Peer-Schnittstelle, warten Sie, bis Eclair auf einen freien Port wechselt, und fügen Sie dann wieder eine Tor-Adresse hinzu – es wird eine neue .onion-Adresse sein.',
+    92: 'Ein anderer Dienst auf diesem Server belegt Port ${listening}, daher hat StartOS dieser Schnittstelle den externen Port ${assigned} zugewiesen und ${address} wird nicht angekündigt. Eclair behält seinen Port, weil Ihre Tor-Adresse davon abhängt. Um über das Clearnet erreichbar zu sein, entfernen Sie die Tor-Adresse von der Peer-Schnittstelle, warten Sie, bis Eclair auf einen freien Port wechselt, und fügen Sie dann wieder eine Tor-Adresse hinzu – es wird eine neue .onion-Adresse sein.',
+    93: 'StartOS hat dieser Schnittstelle den externen Port ${assigned} zugewiesen, Eclair lauscht und kündigt jedoch Port ${listening} an, sodass ${address} nicht angekündigt wird. Eclair behält seinen Port für die Tor-Adresse aus seinem Backup. Stellen Sie Tor aus demselben Backup wieder her, um diese Adresse zurückzubekommen, oder starten Sie den Server neu, damit Eclair auf einen freien Port wechselt.',
   },
   pl_PL: {
     0: 'API',
@@ -284,7 +286,8 @@ export default {
     89: 'sats/vB',
     90: 'Maksymalna stawka opłaty finansowania',
     91: 'Górny limit stawki opłaty dla transakcji finansowania i splice. Chroni to przed niedokładnymi szacunkami opłat, ale otwarcia i splice nie zostaną potwierdzone, gdy mempool wymaga więcej. Podnieś limit lub użyj RBF, gdy utkną.',
-    92: 'Inna usługa na tym serwerze zajmuje port ${listening}, więc StartOS przypisał temu interfejsowi zewnętrzny port ${assigned}, a ${address} nie jest ogłaszany. Eclair pozostaje na porcie ${listening}, ponieważ zależy od niego Twój adres Tor. Aby być osiągalnym przez clearnet, usuń adres Tor z interfejsu Peer, poczekaj, aż Eclair przejdzie na wolny port, a następnie dodaj adres Tor ponownie — będzie to nowy adres .onion.',
+    92: 'Inna usługa na tym serwerze zajmuje port ${listening}, więc StartOS przypisał temu interfejsowi zewnętrzny port ${assigned}, a ${address} nie jest ogłaszany. Eclair zachowuje swój port, ponieważ zależy od niego Twój adres Tor. Aby być osiągalnym przez clearnet, usuń adres Tor z interfejsu Peer, poczekaj, aż Eclair przejdzie na wolny port, a następnie dodaj adres Tor ponownie — będzie to nowy adres .onion.',
+    93: 'StartOS przypisał temu interfejsowi zewnętrzny port ${assigned}, ale Eclair nasłuchuje i ogłasza port ${listening}, więc ${address} nie jest ogłaszany. Eclair zachowuje swój port dla adresu Tor ze swojej kopii zapasowej. Przywróć Tor z tej samej kopii zapasowej, aby odzyskać ten adres, albo uruchom serwer ponownie, aby Eclair przeszedł na wolny port.',
   },
   fr_FR: {
     0: 'API',
@@ -379,6 +382,7 @@ export default {
     89: 'sats/vB',
     90: 'Taux de frais maximal au financement',
     91: 'Plafond du taux de frais utilisé pour les transactions de financement et de splice. Il protège contre les estimations de frais inexactes, mais les ouvertures et les splices ne seront pas confirmés si le mempool exige davantage. Augmentez-le ou utilisez RBF s’ils restent bloqués.',
-    92: 'Un autre service sur ce serveur occupe le port ${listening} : StartOS a donc attribué à cette interface le port externe ${assigned} et ${address} n’est pas annoncée. Eclair reste sur le port ${listening} parce que votre adresse Tor en dépend. Pour être joignable via le clearnet, supprimez l’adresse Tor de l’interface Pair, attendez qu’Eclair passe sur un port libre, puis ajoutez de nouveau une adresse Tor — ce sera une nouvelle adresse .onion.',
+    92: 'Un autre service sur ce serveur occupe le port ${listening} : StartOS a donc attribué à cette interface le port externe ${assigned} et ${address} n’est pas annoncée. Eclair conserve son port parce que votre adresse Tor en dépend. Pour être joignable via le clearnet, supprimez l’adresse Tor de l’interface Pair, attendez qu’Eclair passe sur un port libre, puis ajoutez de nouveau une adresse Tor — ce sera une nouvelle adresse .onion.',
+    93: 'StartOS a attribué à cette interface le port externe ${assigned}, mais Eclair écoute et annonce le port ${listening} : ${address} n’est donc pas annoncée. Eclair conserve son port pour l’adresse Tor de sa sauvegarde. Restaurez Tor depuis la même sauvegarde pour retrouver cette adresse, ou redémarrez le serveur pour qu’Eclair passe sur un port libre.',
   },
 } satisfies Record<string, LangDict>

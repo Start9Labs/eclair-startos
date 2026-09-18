@@ -13,6 +13,13 @@ const shape = z.looseObject({
    * until the first pass.
    */
   peerPort: z.number().int().nullable().catch(null),
+  /**
+   * Whether the Peer interface carried a Tor address at the last pass that
+   * could see one. A restored host is empty until Tor re-exports the onion,
+   * which happens only after this package has bound, so `setInterfaces` reads
+   * this in place of the host on that first pass.
+   */
+  peerOnion: z.boolean().catch(false),
 })
 
 export const storeJson = FileHelper.json(

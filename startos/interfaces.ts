@@ -42,13 +42,30 @@ import {
  * explains the trade; removing the onion lets the next pass move, and an onion
  * added afterwards is created against the new port.
  *
+ * On the first pass after a restore the onion cannot be seen: the host is
+ * created empty, and Tor re-exports the address only once this package has
+ * bound — after a move would already have happened. So each pass that can see
+ * the host records whether the interface carries an onion, the backup carries
+ * the record, and a pass that finds a host with no bindings yet pins on the
+ * record instead. If the onion never returns, Eclair stays put until the next
+ * container init, and Node Reachability says so.
+ *
  * The settled port is verified every pass rather than trusted: the store
  * travels with a backup, and a restore onto a server where that port is held
  * must settle again.
  */
 const bindPeerPort = async (effects: T.Effects) => {
   const stored = await storeJson.read((s) => s.peerPort).const(effects)
-  const pinned = await peerHasOnion(effects)
+  const remembered = (await storeJson.read((s) => s.peerOnion).once()) ?? false
+  const hostBound = await sdk.host
+    .getOwn(
+      effects,
+      peerHostId,
+      (host) => !!host && Object.keys(host.bindings).length > 0,
+    )
+    .once()
+  const onion = await peerHasOnion(effects)
+  const pinned = onion || (!hostBound && remembered)
   const multi = sdk.MultiHost.of(effects, peerHostId)
 
   const bind = (port: number) =>
@@ -78,10 +95,11 @@ const bindPeerPort = async (effects: T.Effects) => {
     origin = await bind(port)
   }
 
-  if (port !== stored) {
+  const seen = hostBound ? onion : remembered
+  if (port !== stored || seen !== remembered) {
     await storeJson.merge(
       effects,
-      { peerPort: port },
+      { peerPort: port, peerOnion: seen },
       { allowWriteAfterConst: true },
     )
   }

@@ -26,7 +26,7 @@ Your on-chain money lives in your Bitcoin service, not here. Eclair opens channe
 
    The URI ends in a port number, and on most servers that is 9735, the Lightning standard. If you already run another Lightning service it will have taken 9735 first, and Eclair uses 19735 instead (or 29735 if that is taken too) — your URI will show that port. Nothing needs doing; give people the URI exactly as shown. If you forward a port on your router for Eclair, forward that one.
 
-   One exception: if the Peer interface already has a Tor address, Eclair keeps its current port so that address keeps working, and stays reachable over Tor only. **Node Reachability** will say so if you also add a public address. To reach peers over clearnet as well, remove the Tor address, wait for Eclair to move to a free port, then add a Tor address back — it will be a new address.
+   One exception: if the Peer interface already has a Tor address, Eclair keeps its current port so that address keeps working, and stays reachable over Tor only. **Node Reachability** will say so if you also add a public address. To reach peers over clearnet as well, remove the Tor address, wait for Eclair to move to a free port, then add a Tor address back — it will be a new address. The same holds after restoring a backup that had a Tor address: Eclair keeps its port for it, and **Node Reachability** says what to do if the address does not come back.
 
 7. Send some bitcoin to your Bitcoin service. You cannot open a channel until there are coins in the `eclair` wallet to fund it with.
 

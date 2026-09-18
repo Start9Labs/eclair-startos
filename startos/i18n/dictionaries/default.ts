@@ -93,7 +93,8 @@ const dict = {
   ppm: 87,
   satoshis: 88,
   'sats/vB': 89,
-  'Another service on this server holds port ${listening}, so StartOS assigned this interface external port ${assigned} and ${address} is not announced. Eclair stays on port ${listening} because your Tor address depends on it. To be reachable over clearnet, remove the Tor address from the Peer interface, wait for Eclair to move to a free port, then add a Tor address back — it will be a new .onion address.': 92,
+  'Another service on this server holds port ${listening}, so StartOS assigned this interface external port ${assigned} and ${address} is not announced. Eclair keeps its port because your Tor address depends on it. To be reachable over clearnet, remove the Tor address from the Peer interface, wait for Eclair to move to a free port, then add a Tor address back — it will be a new .onion address.': 92,
+  'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. Eclair is keeping its port for the Tor address in its backup. Restore Tor from the same backup to bring that address back, or restart the server to let Eclair move to a free port.': 93,
 } as const
 
 /**
