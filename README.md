@@ -138,6 +138,8 @@ Every action but one is user-facing. The Configuration group writes `eclair.conf
 
 **Node Info** (`node-info`) — Reads the node's public key, alias, connectable URIs and processed block height from the running node. Read-only, instant, repeatable. Use it to get the URI a peer needs to open a channel with you; the URI list is empty until the peer interface has a public address.
 
+**Pay Invoice** (`pay-invoice`) — Pays a BOLT11 invoice from the node's own funds: paste the invoice, an amount if it carries none, and the most it may spend in routing fees as a percentage. It decodes the invoice first (`parseinvoice`), then pays through the API's blocking `payinvoice`, and returns the amount, fee, description, destination and preimage; a failure returns Eclair's reason. Only while running. Not idempotent — running it twice pays twice if the invoice allows it, which a single-use BOLT11 does not. A companion service can raise it as a task with the invoice filled in, so a payment it needs is one prompt the user accepts; the node never hands out its API password for it.
+
 **General Settings** (`general`) — Alias, color, whether new channels are announced, and trampoline relaying. Announcing is what makes your node routable by strangers; turning it off leaves existing announced channels announced. Instant, repeatable, applied on the next restart.
 
 **Routing Fees** (`routing-fees`) — What you charge to forward payments, separately for announced and unannounced channels. Eclair applies a fee change to existing channels when it restarts. Instant, repeatable, applied on the next restart.
@@ -225,6 +227,7 @@ interfaces:
 actions:
   - set-api-password
   - node-info
+  - pay-invoice # only-running; a companion service may raise it as a task
   - general
   - routing-fees
   - on-chain-fees
