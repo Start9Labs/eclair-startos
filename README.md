@@ -97,10 +97,10 @@ The package creates a Bitcoin Core wallet named `eclair` before starting the dae
 
 Two interfaces, neither of them a web interface — Eclair does not have one.
 
-| Interface | Type  | Port | Protocol | Purpose                                                                |
-| --------- | ----- | ---- | -------- | ---------------------------------------------------------------------- |
-| `api`     | `api` | 8080 | HTTP     | The JSON API, and the WebSocket at `/ws` that streams payment events   |
-| `peer`    | `p2p` | 9735 | Raw TCP  | Incoming connections from Lightning peers — see below; not always 9735 |
+| Interface | Type  | Port | Protocol | Purpose                                                                                |
+| --------- | ----- | ---- | -------- | -------------------------------------------------------------------------------------- |
+| `api`     | `api` | 8080 | HTTP     | The JSON API, and the WebSocket at `/ws` that streams payment events                   |
+| `peer`    | `p2p` | 9735 | Raw TCP  | Incoming connections from Lightning peers — 19735 or 29735 when 9735 is held; see below |
 
 The API is the whole control surface: every client, dashboard and command line tool acts through it. It authenticates with HTTP Basic using an **empty username** and the API password.
 
@@ -110,9 +110,9 @@ Outbound Tor is configured through the `socks5` block whenever Tor's SOCKS proxy
 
 `setInterfaces` therefore settles on a port that is both Eclair's listening port and the interface's external port, and records it in `startos-store.json` as `peerPort`. It asks for 9735 first, which is what a server with no other Lightning service grants — the overwhelmingly common case, where nothing below applies and the node runs on the standard port.
 
-When 9735 is already held, StartOS assigns an ephemeral external port instead, and **never migrates back**: the assignment is fixed for the life of the binding and keyed on the _internal_ port, so it does not recover when the conflicting service is uninstalled, restarted or the server rebooted. The only way to obtain a matched pair is to bind a _different_ internal port, which is a new binding and does get its preference honoured. So the package binds, reads the port it was actually granted back through `getServicePortForward`, and on a mismatch draws a fresh candidate from 1025–49151 and binds that — all within one pass, so Eclair only ever hears the final answer. The band stops below StartOS's ephemeral range (49152+), whose ports it hands out at random to claimants that don't ask for a specific number, and never includes the package's own API port: ports are container-local, and Eclair binding both on one number fails to start.
+When 9735 is already held, StartOS assigns an ephemeral external port instead, and **never migrates back**: the assignment is fixed for the life of the binding and keyed on the _internal_ port, so it does not recover when the conflicting service is uninstalled, restarted or the server rebooted. The only way to obtain a matched pair is to bind a _different_ internal port, which is a new binding and does get its preference honoured. So the package binds, reads the port it was actually granted back through `getServicePortForward` (StartOS persists the assignment before `bind` returns, so the read sees it), and on a mismatch binds the next port of a fixed list — 9735, then 19735, then 29735 — all within one pass, so Eclair only ever hears the final answer. The fallbacks are ports no package on either registry asks for by number, and that is the only way a port below 49152 can be held: StartOS hands out the ports nobody asked for from 49152 up.
 
-A refused port stays refused for the life of the install — the binding it left behind keeps its own external-port claim, so asking for it again reclaims that claim rather than the port — which is why a refused candidate is never redrawn. It also means the node cannot be moved back onto 9735 later, even after the conflicting service is removed; that needs `retireBinding`, which the SDK this package builds against does not have.
+A refused port stays refused for the life of the install — the binding it left behind keeps its own external-port claim, so asking for it again reclaims that claim rather than the port — which is why the settled port, not 9735, leads every later pass. It also means the node cannot be moved back onto 9735 later, even after the conflicting service is removed; that needs `retireBinding`, which the SDK this package builds against does not have. Should all three be refused — three services holding them by number — Eclair stays on 29735 unannounced and Node Reachability says so. Freeing one of them is not enough: Eclair's binding for that port already holds an ephemeral assignment and keeps it. Uninstalling releases every binding, so a backup, uninstall and restore settles afresh.
 
 **A Tor address pins the port.** Tor forwards an onion to the internal port it was created against and fixes the onion's virtual port there, so moving Eclair's listener would take the onion dark and out of the announcement — and re-adding it afterwards creates a new `.onion` address, because removing the last port mapping deletes the key material. With an onion on the Peer interface a refusal is accepted as-is: Eclair stays on its current port, Tor keeps working, and the Node Reachability check explains the trade if a clearnet address is enabled. Removing the onion lets the next pass move; an onion added afterwards is created against the new port and works.
 
@@ -166,7 +166,7 @@ A check stuck on "starting" for much longer than that is usually one of three th
 
 With no external address at all, it reports `disabled` and asks for one. That is a prompt rather than a fault: a node with no external address still opens channels and routes payments, it just cannot be dialled, so nobody will open a channel with it.
 
-Where the Peer interface has a clearnet address on a port other than the one Eclair listens on, it reports `failure` and names both ports and the stranded address. `disabled` would be wrong here — the user added a public address and it is not working, which is not a check that fails to apply. Onions are left out of that comparison: Tor fixes an onion's port to the one it was created against, so it either matches or is the reason the port did not move, and which of those it is decides the message. With a Tor address present, the message says the port is pinned by it and spells out the trade — remove the Tor address, let Eclair move, add a Tor address back, and expect a new `.onion`. Without one, a stranded address means `setInterfaces` did not converge, which it normally does within a single pass, so the message says to restart Eclair if it persists.
+Where the Peer interface has a clearnet address on a port other than the one Eclair listens on, it reports `failure` and names both ports and the stranded address. `disabled` would be wrong here — the user added a public address and it is not working, which is not a check that fails to apply. Onions are left out of that comparison: Tor fixes an onion's port to the one it was created against, so it either matches or is the reason the port did not move, and which of those it is decides the message. With a Tor address present, the message says the port is pinned by it and spells out the trade — remove the Tor address, let Eclair move, add a Tor address back, and expect a new `.onion`. Without one, a stranded address that persists means every port in the list was refused; the message names the ports and points at Tor, and the remedy for clearnet is under [Network Access and Interfaces](#network-access-and-interfaces).
 
 Nothing depending on Eclair is affected by the `failure`: BTCPay Server and LNbits both gate on the `eclair` health check, not this one.
 
@@ -211,7 +211,7 @@ startos_managed_env_vars:
 dependencies: [bitcoind]
 interfaces:
   api: { type: api, port: 8080 }
-  peer: { type: p2p, port: 9735 } # default; see Network Access and Interfaces
+  peer: { type: p2p, port: 9735 } # or 19735 / 29735; see Network Access and Interfaces
 actions:
   - set-api-password
   - node-info

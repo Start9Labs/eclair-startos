@@ -11,38 +11,14 @@ import { sdk } from './sdk'
 export const apiPort = 8080
 
 /**
- * The Lightning standard peer port, and the first port this package asks
- * StartOS to assign the Peer interface. It is a preference, not a guarantee —
- * see `bindPeerPort` in interfaces.ts.
+ * Asked of StartOS in this order until one is granted as the Peer interface's
+ * external port; see `bindPeerPort` in interfaces.ts. 9735 is the Lightning
+ * standard. A fallback must be a port no package asks for by number: StartOS
+ * assigns unrequested ports from 49152 up, so below that only a request holds
+ * one.
  */
-export const defaultPeerPort = 9735
-
-/**
- * The band a replacement peer port is drawn from. The lower bound is the first
- * port an unprivileged claimant may take (StartOS refuses <= 1024); the upper
- * bound stops one short of StartOS's own ephemeral range, whose ports it hands
- * out at random to anyone who doesn't ask for a specific number — a candidate
- * drawn from in there would be racing those allocations.
- */
-const peerPortMin = 1025
-const peerPortMax = 49151
-
-/**
- * A fresh candidate peer port, excluding any already tried. Uniform over a
- * ~48,000-port band against the handful a server actually uses, so the first
- * draw is granted except on a pathologically crowded box. Never this package's
- * own API port: ports are container-local, and eclair binding both on one
- * number fails to start. Anything StartOS itself won't grant simply comes back
- * refused and is redrawn.
- */
-export const pickPeerPort = (exclude: readonly number[] = []): number => {
-  const span = peerPortMax - peerPortMin + 1
-  for (let i = 0; i < 100; i++) {
-    const port = peerPortMin + Math.floor(Math.random() * span)
-    if (port !== apiPort && !exclude.includes(port)) return port
-  }
-  throw new Error('could not find an untried peer port candidate')
-}
+export const peerPorts = [9735, 19735, 29735]
+export const defaultPeerPort = peerPorts[0]
 
 export const apiHostId = 'api'
 export const peerHostId = 'peer'

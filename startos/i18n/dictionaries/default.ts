@@ -5,7 +5,7 @@ const dict = {
   Alias: 1,
   'Announce Channels': 2,
   'Announce new channels to the Lightning Network so others can route payments through your node. Turn this off to run an unannounced node whose channels stay private.': 3,
-  'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. This normally corrects itself on the next start; if it persists, restart Eclair.': 4,
+  'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. If this persists, StartOS refused Eclair every port it can use (${ports}). Add a Tor address to the Peer interface to be reachable.': 4,
   'Block Height': 5,
   'Ceiling on the feerate used to reclaim funds that are not at risk when a channel closes. Closing transactions will not confirm while the mempool demands more than this, so raise it when you need the funds back in a hurry.': 6,
   'Ceiling on the feerate used for funding and splice transactions. This protects against inaccurate fee estimates, but opens and splices will not confirm when the mempool demands more. Raise it or use RBF when they stall.': 91,

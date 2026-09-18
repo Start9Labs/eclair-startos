@@ -17,6 +17,7 @@ import {
   getBitcoindBundle,
   mainMounts,
   isOnion,
+  peerPorts,
   peerPublicAddresses,
   sleep,
 } from './utils'
@@ -193,8 +194,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
               params,
             )
           : i18n(
-              'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. This normally corrects itself on the next start; if it persists, restart Eclair.',
-              params,
+              'StartOS assigned this interface external port ${assigned}, but Eclair listens on and announces port ${listening}, so ${address} is not announced. If this persists, StartOS refused Eclair every port it can use (${ports}). Add a Tor address to the Peer interface to be reachable.',
+              { ...params, ports: peerPorts.join(', ') },
             )
         return {
           ready: {

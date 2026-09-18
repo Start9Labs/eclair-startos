@@ -6,15 +6,11 @@ import {
   apiHostId,
   apiInterfaceId,
   apiPort,
-  defaultPeerPort,
   peerHasOnion,
   peerHostId,
   peerInterfaceId,
-  pickPeerPort,
+  peerPorts,
 } from './utils'
-
-/** Ports tried in one pass before giving up and letting the health check report. */
-const maxPeerPortAttempts = 8
 
 /**
  * Bind the Peer interface to a port eclair can actually announce.
@@ -31,11 +27,13 @@ const maxPeerPortAttempts = 8
  * not when that service is uninstalled, not on restart. The assignment is fixed
  * for the life of the binding and keyed on the *internal* port, so the only way
  * to obtain a matched pair is to bind a different internal port: that is a new
- * binding, and a new binding does get its preference honoured. So each attempt
- * is bound, read back through `getServicePortForward`, and redrawn on refusal,
- * all within this pass — eclair only ever hears the final answer. A refused
- * attempt stays bound until the next pass disables it, and its external claim
- * is permanent either way, which is why a refused port is never redrawn.
+ * binding, and a new binding does get its preference honoured. So `peerPorts`
+ * are bound in turn, each read back through `getServicePortForward` — which
+ * sees the bind, since StartOS persists the assignment before `bind` returns —
+ * until one is granted, all within this pass: eclair only ever hears the final
+ * answer. A refused attempt stays bound until the next pass disables it, and
+ * its external claim is permanent either way, which is why the settled port
+ * rather than 9735 leads every later pass.
  *
  * A Tor address pins the port. Tor forwards an onion to the internal port it
  * was created against and fixes the onion's virtual port there, so moving would
@@ -68,16 +66,15 @@ const bindPeerPort = async (effects: T.Effects) => {
       })
     )?.assignedPort ?? null
 
-  const refused: number[] = []
-  let port = stored ?? defaultPeerPort
+  const [first, ...rest] =
+    stored == null
+      ? peerPorts
+      : [stored, ...peerPorts.filter((p) => p !== stored)]
+  let port = first
   let origin = await bind(port)
-  while (
-    (await granted(port)) !== port &&
-    !pinned &&
-    refused.length < maxPeerPortAttempts
-  ) {
-    refused.push(port)
-    port = pickPeerPort(refused)
+  for (const next of rest) {
+    if (pinned || (await granted(port)) === port) break
+    port = next
     origin = await bind(port)
   }
 
