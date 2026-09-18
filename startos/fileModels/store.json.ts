@@ -20,6 +20,15 @@ const shape = z.looseObject({
    * this in place of the host on that first pass.
    */
   peerOnion: z.boolean().catch(false),
+  // Verbatim: the companion's task compares it byte for byte. `announceIp` is what `server.public-ips` takes.
+  clearnetVpn: z
+    .object({
+      config: z.string(),
+      announce: z.string(),
+      announceIp: z.string(),
+    })
+    .nullable()
+    .catch(null),
 })
 
 export const storeJson = FileHelper.json(

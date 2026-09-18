@@ -1,7 +1,9 @@
-import { FileHelper, T } from '@start9labs/start-sdk'
+import { FileHelper } from '@start9labs/start-sdk'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
+import { createHash } from 'node:crypto'
 import { eclairConf } from './fileModels/eclair.conf'
 import { storeJson } from './fileModels/store.json'
+import { vpnConfFile } from './fileModels/vpn.conf'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import {
@@ -21,6 +23,15 @@ import {
   peerPublicAddresses,
   sleep,
 } from './utils'
+import {
+  handshakeStaleMs,
+  parseWireguardConfig,
+  renderWgQuick,
+  vpnDownScript,
+  vpnIface,
+  vpnUpScript,
+} from './vpn'
+import { mkdir, rm } from 'node:fs/promises'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   const bitcoind = await getBitcoindBundle(effects)
@@ -48,6 +59,20 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const maxHeapMib =
     (await storeJson.read((s) => s.maxHeapMib).const(effects)) ?? 1024
 
+  const clearnetVpn = await storeJson.read((s) => s.clearnetVpn).const(effects)
+  const vpn = clearnetVpn && parseWireguardConfig(clearnetVpn.config)
+  if (vpn && 'error' in vpn) {
+    throw new Error(`invalid clearnet VPN configuration: ${vpn.error}`)
+  }
+  if (vpn) {
+    await mkdir(sdk.volumes.main.subpath('./vpn'), { recursive: true })
+    await vpnConfFile.write(effects, renderWgQuick(vpn.config, peerPort))
+  } else {
+    await rm(sdk.volumes.main.subpath(`./vpn/${vpnIface}.conf`), {
+      force: true,
+    })
+  }
+
   const eclairSub = sdk.SubContainer.of(
     effects,
     { imageId: 'eclair' },
@@ -71,6 +96,15 @@ export const main = sdk.setupMain(async ({ effects }) => {
       (prev, next) => next === null || prev === next,
     )
     .const(effects)
+
+  let vpnHealthConfig = JSON.stringify({
+    config: clearnetVpn?.config ?? null,
+    peerPort,
+  })
+  let vpnNoHandshakeSince = Date.now()
+  const vpnConfigHash = createHash('sha256')
+    .update(vpnHealthConfig)
+    .digest('hex')
 
   return sdk.Daemons.of(effects)
     .addOneshot('bitcoind-wallet', {
@@ -130,6 +164,14 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       requires: ['bitcoind-wallet'],
     })
+    .addOneshot('vpn', {
+      subcontainer: eclairSub,
+      exec: {
+        command: ['sh', '-c', vpn ? vpnUpScript : vpnDownScript],
+        env: { STARTOS_VPN_CONFIG_HASH: vpnConfigHash },
+      },
+      requires: [],
+    })
     .addDaemon('eclair', {
       subcontainer: eclairSub,
       exec: {
@@ -169,8 +211,84 @@ export const main = sdk.setupMain(async ({ effects }) => {
           }
         },
       },
-      requires: ['bitcoind-synced'],
+      requires: ['bitcoind-synced', 'vpn'],
     })
+    .addHealthCheck('vpn-tunnel', () =>
+      vpn
+        ? {
+            ready: {
+              display: i18n('Clearnet VPN'),
+              trigger: sdk.trigger.statusTrigger(30_000, {
+                starting: 5_000,
+                failure: 30_000,
+              }),
+              fn: async () => {
+                const currentConfig = JSON.stringify(
+                  (await storeJson
+                    .read((s) => ({
+                      config: s.clearnetVpn?.config ?? null,
+                      peerPort: s.peerPort,
+                    }))
+                    .once()) ?? { config: null, peerPort: null },
+                )
+                if (currentConfig !== vpnHealthConfig) {
+                  vpnHealthConfig = currentConfig
+                  vpnNoHandshakeSince = Date.now()
+                }
+                const noHandshake = () => {
+                  const ageMs = Date.now() - vpnNoHandshakeSince
+                  return ageMs > handshakeStaleMs
+                    ? {
+                        result: 'failure' as const,
+                        message: i18n(
+                          'No WireGuard handshake for ${minutes} minutes. Clearnet traffic is held until the tunnel returns, not sent over your ISP connection.',
+                          { minutes: String(Math.floor(ageMs / 60_000)) },
+                        ),
+                      }
+                    : {
+                        result: 'starting' as const,
+                        message: i18n(
+                          'Waiting for the first WireGuard handshake.',
+                        ),
+                      }
+                }
+                let res
+                try {
+                  res = await eclairSub.exec(
+                    ['wg', 'show', vpnIface, 'latest-handshakes'],
+                    {},
+                    10_000,
+                  )
+                } catch {
+                  return noHandshake()
+                }
+                if (res.exitCode !== 0) return noHandshake()
+                const epoch = Number(
+                  String(res.stdout).trim().split(/\s+/)[1] ?? 0,
+                )
+                if (!epoch) return noHandshake()
+                const ageMs = Date.now() - epoch * 1000
+                if (ageMs > handshakeStaleMs) {
+                  return {
+                    result: 'failure',
+                    message: i18n(
+                      'No WireGuard handshake for ${minutes} minutes. Clearnet traffic is held until the tunnel returns, not sent over your ISP connection.',
+                      { minutes: String(Math.floor(ageMs / 60_000)) },
+                    ),
+                  }
+                }
+                return {
+                  result: 'success',
+                  message: i18n('Tunnel up; last handshake ${seconds}s ago.', {
+                    seconds: String(Math.floor(ageMs / 1000)),
+                  }),
+                }
+              },
+            },
+            requires: ['vpn'],
+          }
+        : null,
+    )
     .addHealthCheck('reachability', () => {
       const display = i18n('Node Reachability')
       // Nothing here initializes, so the default grace period would only show
