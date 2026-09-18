@@ -89,9 +89,19 @@ const bindPeerPort = async (effects: T.Effects) => {
       : [stored, ...peerPorts.filter((p) => p !== stored)]
   let port = first
   let origin = await bind(port)
+  let settled = pinned || (await granted(port)) === port
   for (const next of rest) {
-    if (pinned || (await granted(port)) === port) break
+    if (settled) break
     port = next
+    origin = await bind(port)
+    settled = (await granted(port)) === port
+  }
+  // Every port refused. Stay on the last of the list whichever port led this
+  // pass: the last one *tried* rotates with the stored port, and persisting it
+  // would change the store on every pass and re-run this handler without end.
+  const last = peerPorts[peerPorts.length - 1]
+  if (!settled && port !== last) {
+    port = last
     origin = await bind(port)
   }
 
