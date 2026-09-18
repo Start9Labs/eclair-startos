@@ -178,7 +178,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       const gracePeriod = 0
       // The result cannot change until this context rebuilds, so report once
       // and then hourly rather than every second.
-      const trigger = sdk.trigger.statusTrigger(3_600_000, { waiting: 1_000 })
+      const trigger = sdk.trigger.statusTrigger(3_600_000, { starting: 1_000 })
 
       // Clearnet addresses eclair cannot announce: reachable on a port other
       // than the one it listens on. Onions are left out — Tor fixes an onion's
