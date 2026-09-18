@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '0.14.3:0',
+  version: '0.14.3:1',
   releaseNotes: {
     en_US:
-      'Updated Eclair to 0.14.3, a recommended security-hardening release that addresses issues malicious nodes could exploit. Adds a configurable cap on funding and splice transaction feerates; existing channels remain compatible and do not need to be closed. [Full upstream release notes](https://github.com/ACINQ/eclair/releases/tag/v0.14.3)',
+      "Eclair now falls back to port 19735 (or 29735) when another service on the server holds 9735, so it can announce its clearnet address; an affected node's URI shows the new port. A node with a Tor address keeps its current port so the address keeps working, and Node Reachability explains how to move it.",
     es_ES:
-      'Se actualizó Eclair a la versión 0.14.3, una versión recomendada de refuerzo de seguridad que corrige problemas que podrían aprovechar nodos maliciosos. Añade un límite configurable a la tasa de comisión de las transacciones de financiación y empalme; los canales existentes siguen siendo compatibles y no es necesario cerrarlos. [Notas completas de la versión upstream](https://github.com/ACINQ/eclair/releases/tag/v0.14.3)',
+      'Eclair ahora recurre al puerto 19735 (o 29735) cuando otro servicio del servidor ocupa el 9735, de modo que puede anunciar su dirección clearnet; el URI de un nodo afectado muestra el nuevo puerto. Un nodo con dirección Tor conserva su puerto actual para que la dirección siga funcionando, y Accesibilidad del nodo explica cómo cambiarlo.',
     de_DE:
-      'Eclair wurde auf 0.14.3 aktualisiert, eine empfohlene Version zur Sicherheitshärtung, die von bösartigen Knoten ausnutzbare Probleme behebt. Fügt eine konfigurierbare Obergrenze für die Gebührenrate von Finanzierungs- und Splice-Transaktionen hinzu; bestehende Kanäle bleiben kompatibel und müssen nicht geschlossen werden. [Vollständige Upstream-Versionshinweise](https://github.com/ACINQ/eclair/releases/tag/v0.14.3)',
+      'Eclair weicht jetzt auf Port 19735 (oder 29735) aus, wenn ein anderer Dienst auf dem Server Port 9735 belegt, und kann so seine Clearnet-Adresse ankündigen; bei einem betroffenen Knoten zeigt die URI den neuen Port. Ein Knoten mit Tor-Adresse behält seinen aktuellen Port, damit die Adresse weiter funktioniert; die Erreichbarkeitsprüfung erklärt, wie Sie ihn wechseln.',
     pl_PL:
-      'Zaktualizowano Eclair do wersji 0.14.3, zalecanego wydania wzmacniającego bezpieczeństwo, które usuwa problemy możliwe do wykorzystania przez złośliwe węzły. Dodano konfigurowalny limit stawki opłat dla transakcji finansowania i splice; istniejące kanały pozostają zgodne i nie trzeba ich zamykać. [Pełne informacje o wydaniu upstream](https://github.com/ACINQ/eclair/releases/tag/v0.14.3)',
+      'Eclair przechodzi teraz na port 19735 (lub 29735), gdy inna usługa na serwerze zajmuje port 9735, dzięki czemu może ogłosić swój adres clearnet; URI takiego węzła pokazuje nowy port. Węzeł z adresem Tor zachowuje obecny port, aby adres nadal działał, a kontrola osiągalności węzła wyjaśnia, jak go zmienić.',
     fr_FR:
-      'Mise à jour d’Eclair vers la version 0.14.3, une version recommandée de renforcement de la sécurité qui corrige des problèmes exploitables par des nœuds malveillants. Ajoute un plafond configurable au taux de frais des transactions de financement et de splice ; les canaux existants restent compatibles et ne doivent pas être fermés. [Notes de version complètes en amont](https://github.com/ACINQ/eclair/releases/tag/v0.14.3)',
+      'Eclair se rabat désormais sur le port 19735 (ou 29735) lorsqu’un autre service du serveur occupe le 9735, et peut ainsi annoncer son adresse clearnet ; l’URI d’un nœud concerné affiche le nouveau port. Un nœud doté d’une adresse Tor conserve son port actuel pour que l’adresse continue de fonctionner, et la vérification de joignabilité explique comment en changer.',
   },
   migrations: {
     up: async ({ effects }) => {},
