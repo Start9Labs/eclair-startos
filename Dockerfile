@@ -5,7 +5,8 @@ ARG ECLAIR_COMMIT=1de8b2d
 ARG ECLAIR_SHA256=06bd8f1a203b6fd7ba0659a3c20e69e69712591ef24b109caad90c0da4ad4535
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends bash ca-certificates curl jq unzip && \
+    apt-get install -y --no-install-recommends bash ca-certificates curl jq unzip \
+      wireguard-tools iptables iproute2 procps && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
