@@ -150,23 +150,23 @@ Every action but one is user-facing. The Configuration group writes `eclair.conf
 
 **Channel Settings** (`channels`) — The smallest and largest channels the node will accept, how many payments may be in flight per direction, and what to do about coins left locked by an interrupted channel funding. The last of these is the one that matters during an incident: the default refuses to start until the coins are unlocked, and switching it to Unlock lets Eclair release them itself. Instant, repeatable, applied on the next restart.
 
-**Clearnet VPN** (`clearnet-vpn`) — Hidden, and not a general VPN facility: it exists for the TunnelSats service, which raises it as a task with its tunnel configuration and public address filled in, so the user only ever sees that prompt. It stores both, resolves the public address's host to the IP `server.public-ips` takes, and sets `peerPort` to the address's port — Eclair announces one port for every address, so it has to listen on the provider's port; `bindPeerPort` binds it and inside the tunnel the provider's forward to 9735 is redirected to it. Costs a restart. A new configuration replaces the tunnel; an empty one turns it off, but leaves the port where it settled. Safe to repeat.
+**Clearnet VPN** (`clearnet-vpn`) — Hidden, and raised as a task by a companion package with its tunnel configuration and public address filled in. Its only known uses are the TunnelSats community package and running it by hand with some other WireGuard configuration, which is unsupported. It is not how a node is made reachable or routed: inbound reachability comes from addresses on the node's StartOS interfaces, and outbound traffic leaves through the gateway StartOS selects for it. It stores the configuration and the address, resolves the public address's host to the IP `server.public-ips` takes, and sets `peerPort` to the address's port — Eclair announces one port for every address, so it has to listen on the provider's port; `bindPeerPort` binds it and inside the tunnel the provider's forward to 9735 is redirected to it. Costs a restart. A new configuration replaces the tunnel; an empty one turns it off, but leaves the port where it settled. Safe to repeat.
 
 **Performance** (`performance`) — The JVM heap ceiling. Raise it if Eclair stops with an out-of-memory error, which is the failure mode of a node that has grown more channels than the current ceiling supports. Instant, repeatable, applied on the next restart.
 
 ## Tasks
 
-The package raises two tasks, one on itself and one on Bitcoin; a third is raised on it by the TunnelSats service.
+The package raises two tasks, one on itself and one on Bitcoin; a companion package can raise a third on it.
 
 **Set the API password** — Raised on Eclair whenever `api.password` in `eclair.conf` is empty, which on a fresh install is immediately. Severity `critical`, so Eclair will not start and its ordinary controls are replaced by the prompt. Running **Set API Password** clears it. It returns only if the password is emptied by hand.
 
 **Configure Bitcoin** — Raised on **Bitcoin**, not on Eclair, and it appears on Bitcoin's page with no indication of which package asked for it. It targets Bitcoin's own hidden `autoconfig` action and asks for ZeroMQ enabled, the transaction index enabled, and pruning off. Severity `critical`. Approving the pre-filled form on Bitcoin clears it; it returns whenever Bitcoin's configuration drifts away from those three values. On a pruned node, satisfying it means a full resync, because the transaction index cannot be built without one.
 
-**Clearnet VPN** — Raised on Eclair only by the TunnelSats service, with the tunnel configuration and public address filled in. Severity `important`. Cleared when the stored configuration matches what TunnelSats proposes; it returns when TunnelSats issues a new one.
+**Clearnet VPN** — Raised on Eclair only by a companion package, with the tunnel configuration and public address filled in. Severity `important`. Cleared when the stored configuration matches what the companion package proposes; it returns when that package issues a new one.
 
 ## Health Checks
 
-Three checks: one on the Eclair daemon itself, one that appears only while the node is unreachable from outside, and one that appears only while TunnelSats has configured a tunnel.
+Three checks: one on the Eclair daemon itself, one that appears only while the node is unreachable from outside, and one that appears only while a tunnel is configured.
 
 **Eclair** — Calls `getinfo` on the local API and reports the block height Eclair has processed. It reads "starting" rather than failing while the API refuses the call, because a JVM that is still loading and a node that is broken look identical from outside for the first minute or so.
 
@@ -203,7 +203,6 @@ A restored instance rebuilds the gossip graph on its own, which takes a while an
 5. **SQLite only.** Upstream's PostgreSQL backend, and the `eclair-front` clustering it enables, are not packaged.
 6. **Plugins are not supported.** There is no path for placing a plugin jar where Eclair would load it.
 7. **Bitcoin must be unpruned and transaction-indexed**, which is a substantially larger disk commitment than a pruned node.
-8. **The tunnel TunnelSats installs carries everything or nothing.** Its configuration's `AllowedIPs` must include `0.0.0.0/0`; `DNS =` lines are ignored; IPv6 is routed into the tunnel when it carries `::/0` and blackholed otherwise; only the peer port is reachable through it; and while it is configured `server.public-ips` holds the tunnel's IP alone. Eclair moves to the tunnel's port, and stays there when the tunnel is removed.
 
 ---
 
@@ -236,11 +235,11 @@ actions:
   - on-chain-fees
   - channels
   - performance
-  - clearnet-vpn # hidden; raised as a task by the tunnelsats service
+  - clearnet-vpn # hidden; raised as a task by a companion package
 tasks:
   - { action: set-api-password, severity: critical }
   - { action: bitcoind/autoconfig, severity: critical }
-  - { action: clearnet-vpn, severity: important } # only when the tunnelsats service raises it
+  - { action: clearnet-vpn, severity: important } # only when a companion package raises it
 health_checks:
   - eclair
   - reachability # declared only while the node is unreachable from outside
