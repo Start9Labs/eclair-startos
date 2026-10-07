@@ -46,17 +46,17 @@ The same interface carries a WebSocket at `/ws` that pushes an event whenever yo
 
 ### Actions
 
-- **Set API Password** — generates your API password, and generates a new one whenever you want to cut off everything currently connected. Restart Eclair afterwards for the change to take effect.
+- **Set API Password** — generates your API password, and generates a new one whenever you want to cut off everything currently connected. Eclair restarts with the new password, and every client needs it to reconnect.
 - **Node Info** — your node's public key, alias, block height and the URIs peers can reach you at.
 - **Pay Invoice** — pays a Lightning invoice from your node without a wallet app: paste it, enter an amount only if the invoice leaves it open, set the most you are willing to pay in routing fees, and confirm. Verify the decoded amount, destination, and description before sending; payments cannot be reversed. The result shows what was paid and the preimage. A service that needs a payment from you can raise the same prompt with those details disclosed and the invoice locked.
 - **Receive Payment** creates an invoice for someone to pay you: set an amount (or leave it empty to let them choose), a description they will see, and how long it stays payable, then show them the QR code or send them the invoice text. Both live under **Payments**.
 - **General Settings** — your node's name and color, whether new channels are announced to the network, and trampoline relaying. An unannounced node can still send and receive; it just won't be routed through by strangers.
 - **Routing Fees** — what you charge to forward other people's payments.
-- **On-Chain Fees** — how quickly you want channel openings and closings to confirm. **Maximum Funding Feerate** protects channel opens and splices from inaccurate fee estimates; raise it or use RBF when one stalls. If a channel close is stuck unconfirmed, raise **Maximum Closing Feerate** and restart; Eclair will re-bid the transaction at the higher rate.
-- **Channel Settings** — the smallest and largest channels you will accept, and what to do about coins left locked by a channel opening that was interrupted. If Eclair refuses to start and complains about locked coins, set that to **Unlock** and restart.
+- **On-Chain Fees** — how quickly you want channel openings and closings to confirm. **Maximum Funding Feerate** protects channel opens and splices from inaccurate fee estimates; raise it or use RBF when one stalls. If a channel close is stuck unconfirmed, raise **Maximum Closing Feerate**; Eclair restarts and re-bids the transaction at the higher rate.
+- **Channel Settings** — the smallest and largest channels you will accept, and what to do about coins left locked by a channel opening that was interrupted. If Eclair refuses to start and complains about locked coins, set that to **Unlock**.
 - **Performance** — how much memory Eclair may use. Raise it if Eclair stops with an out-of-memory error; a node with many channels needs more than the default.
 
-Settings changes are written to Eclair's configuration file, which it only reads when it starts, so restart Eclair after changing any of them.
+Eclair reads its settings only when it starts, so saving any of them restarts Eclair if it is running.
 
 ### Backups
 

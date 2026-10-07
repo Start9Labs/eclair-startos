@@ -22,7 +22,7 @@ export const setApiPassword = sdk.Action.withoutInput(
         : i18n('Generate the password your Eclair clients authenticate with'),
       warning: existing
         ? i18n(
-            'Eclair reads its password once at startup, so the new password takes effect when the service restarts.',
+            'This replaces the API password and restarts Eclair if it is running. Every client connected with the old password stops working until it is given the new one.',
           )
         : null,
       allowedStatuses: 'any',

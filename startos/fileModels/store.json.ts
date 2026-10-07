@@ -22,7 +22,7 @@ const shape = z.looseObject({
   peerOnion: z.boolean().catch(false),
   // Verbatim: the companion's task compares it byte for byte. `announceIp` is what `server.public-ips` takes.
   clearnetVpn: z
-    .object({
+    .looseObject({
       config: z.string(),
       announce: z.string(),
       announceIp: z.string(),
