@@ -69,7 +69,7 @@ const inputSpec = async ({
     amount: Value.union({
       name: i18n('Amount'),
       description: i18n(
-        'Most invoices state their amount; enter one only when the invoice leaves it open.',
+        'Most invoices state their amount.\n- As stated in the invoice: pay exactly the amount the invoice carries\n- Enter an amount: only for an invoice that leaves the amount open',
       ),
       default: 'invoice',
       variants: Variants.of({

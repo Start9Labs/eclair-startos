@@ -75,15 +75,28 @@ export const nodeInfo = sdk.Action.withoutInput(
             description: i18n(
               'The addresses peers use to open a channel with you. Empty until your Peer interface has a public address.',
             ),
-            type: 'single',
+            type: 'group',
             value: info.publicAddresses.length
-              ? info.publicAddresses
-                  .map((a) => `${info.nodeId}@${a}`)
-                  .join('\n')
-              : i18n('None'),
-            copyable: true,
-            qr: false,
-            masked: false,
+              ? info.publicAddresses.map((a, i) => ({
+                  name: `${i18n('Node URI')} ${i + 1}`,
+                  description: null,
+                  type: 'single' as const,
+                  value: `${info.nodeId}@${a}`,
+                  copyable: true,
+                  qr: true,
+                  masked: false,
+                }))
+              : [
+                  {
+                    name: i18n('Node URI'),
+                    description: null,
+                    type: 'single' as const,
+                    value: i18n('None'),
+                    copyable: false,
+                    qr: false,
+                    masked: false,
+                  },
+                ],
           },
           {
             name: i18n('Block Height'),

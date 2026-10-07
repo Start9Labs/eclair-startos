@@ -214,7 +214,9 @@ export const fullConfigSpec = InputSpec.of({
   }),
   'on-chain-fees.confirmation-priority.funding': Value.select({
     name: i18n('Funding Confirmation Priority'),
-    description: i18n('How fast channel funding transactions should confirm'),
+    description: i18n(
+      "The fee your node offers on channel funding transactions, taken from your Bitcoin node's fee estimate for the chosen speed.\n- Slow: aims to confirm within about a week (1008 blocks), for the lowest fee\n- Medium: aims to confirm within about two hours (12 blocks)\n- Fast: aims to confirm within about 20 minutes (2 blocks), for the highest fee",
+    ),
     default: 'medium',
     values: {
       slow: i18n('Slow'),
@@ -224,7 +226,9 @@ export const fullConfigSpec = InputSpec.of({
   }),
   'on-chain-fees.confirmation-priority.closing': Value.select({
     name: i18n('Closing Confirmation Priority'),
-    description: i18n('How fast channel closing transactions should confirm'),
+    description: i18n(
+      "The fee your node offers on channel closing transactions, taken from your Bitcoin node's fee estimate for the chosen speed.\n- Slow: aims to confirm within about a week (1008 blocks), for the lowest fee\n- Medium: aims to confirm within about two hours (12 blocks)\n- Fast: aims to confirm within about 20 minutes (2 blocks), for the highest fee",
+    ),
     default: 'medium',
     values: {
       slow: i18n('Slow'),
@@ -301,7 +305,7 @@ export const fullConfigSpec = InputSpec.of({
   'bitcoind.startup-locked-utxos-behavior': Value.select({
     name: i18n('Locked UTXO Behavior'),
     description: i18n(
-      'What to do when coins are still locked from a channel funding that was interrupted. Stop refuses to start until you unlock them yourself; Unlock releases them automatically; Ignore starts and leaves them locked.',
+      'What to do at startup when coins are still locked from a channel funding that was interrupted.\n- Stop: Eclair refuses to start until you unlock them yourself\n- Unlock: Eclair releases them automatically and starts\n- Ignore: Eclair starts and leaves them locked',
     ),
     default: 'stop',
     values: {

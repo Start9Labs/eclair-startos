@@ -256,8 +256,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
                 try {
                   res = await eclairSub.exec(
                     ['wg', 'show', vpnIface, 'latest-handshakes'],
-                    {},
-                    10_000,
+                    { timeout: 10_000 },
                   )
                 } catch {
                   return noHandshake()

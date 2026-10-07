@@ -18,7 +18,10 @@ Freshly scaffolded? Work the
 guide page, not a file in this repo — read it, don't copy it in.
 
 Keep `README.md` (technical reference for an AI support or administering agent) and
-`instructions.md` (end-user docs) in sync with your changes.
+`instructions.md` (end-user docs) in sync with your changes. This file restates neither:
+whoever changes the package has both, so it carries only what they don't — repo mechanics,
+a change that looks right and is not, where the next thing gets added, a naming trap, a
+build or test invocation particular to this repo.
 
 **Fix a defect you spot rather than reporting it** — you have the package open and the
 context to be sure. File **a GitHub issue on this repo** only when the call isn't yours to
@@ -31,9 +34,8 @@ verified, tried, and decided belongs in the commit message and the PR body.
 
 ## This repo
 
-- **`eclair.conf` is written as JSON**, which Eclair's HOCON parser accepts unchanged. The file
-  model transforms that nesting to flat dotted keys, so package code addresses a setting by its
-  documented path (`api.password`, `relay.fees.public-channels.fee-base-msat`). Don't reach for an
-  INI or HOCON writer.
+- **Address `eclair.conf` settings by their flat dotted path** (`api.password`,
+  `relay.fees.public-channels.fee-base-msat`); the file model nests them into the JSON Eclair
+  reads. Don't reach for an INI or HOCON writer.
 - **`printToConsole` is read by logback as a JVM system property**, not by Eclair's config parser,
   so it belongs in `JAVA_OPTS` on the daemon. Putting it in `eclair.conf` silently loses the logs.
