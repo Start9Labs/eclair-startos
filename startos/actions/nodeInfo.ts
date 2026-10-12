@@ -38,6 +38,7 @@ export const nodeInfo = sdk.Action.withoutInput(
           value: `${res.status} ${res.statusText}`,
           copyable: false,
           qr: false,
+          launchable: false,
           masked: false,
         },
       }
@@ -59,6 +60,7 @@ export const nodeInfo = sdk.Action.withoutInput(
             value: info.alias,
             copyable: true,
             qr: false,
+            launchable: false,
             masked: false,
           },
           {
@@ -68,6 +70,7 @@ export const nodeInfo = sdk.Action.withoutInput(
             value: info.nodeId,
             copyable: true,
             qr: true,
+            launchable: false,
             masked: false,
           },
           {
@@ -84,6 +87,7 @@ export const nodeInfo = sdk.Action.withoutInput(
                   value: `${info.nodeId}@${a}`,
                   copyable: true,
                   qr: true,
+                  launchable: false,
                   masked: false,
                 }))
               : [
@@ -94,6 +98,7 @@ export const nodeInfo = sdk.Action.withoutInput(
                     value: i18n('None'),
                     copyable: false,
                     qr: false,
+                    launchable: false,
                     masked: false,
                   },
                 ],
@@ -105,6 +110,7 @@ export const nodeInfo = sdk.Action.withoutInput(
             value: String(info.blockHeight),
             copyable: false,
             qr: false,
+            launchable: false,
             masked: false,
           },
         ],

@@ -37,6 +37,7 @@ export const row = (
   description: null,
   copyable,
   qr,
+  launchable: false,
   masked: false,
   type: 'single' as const,
   value,
