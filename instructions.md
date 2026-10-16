@@ -34,7 +34,7 @@ Your on-chain money lives in your Bitcoin service, not here. Eclair opens channe
 
 ### The API
 
-Connect to the **API** interface with an **empty username** and your API password. Every dashboard, wallet and script that supports Eclair uses this.
+Connect to the **API** interface with an **empty username** and your API password. Use a command-line client or an application that connects through its own backend: direct browser API and WebSocket connections are blocked for security. You can also use the StartOS actions below without an external client.
 
 From a terminal, `eclair-cli` is bundled in the service:
 

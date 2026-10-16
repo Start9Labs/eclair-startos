@@ -102,7 +102,7 @@ Two interfaces, neither of them a web interface — Eclair does not have one.
 | `api`     | `api` | 8080 | HTTP     | The JSON API, and the WebSocket at `/ws` that streams payment events                    |
 | `peer`    | `p2p` | 9735 | Raw TCP  | Incoming connections from Lightning peers — 19735 or 29735 when 9735 is held; see below |
 
-The API is the whole control surface: every client, dashboard and command line tool acts through it. It authenticates with HTTP Basic using an **empty username** and the API password.
+The API is the whole control surface: clients, dashboard backends and command line tools act through it. It authenticates with HTTP Basic using an **empty username** and the API password. Requests carrying an `Origin` header receive HTTP 403, including WebSocket handshakes; a dashboard must call Eclair from its backend, not directly from the browser. The package's actions and readiness probe send no `Origin` header.
 
 Outbound Tor is configured through the `socks5` block whenever Tor's SOCKS proxy resolves, which is what lets Eclair dial `.onion` peers. Eclair's own `tor` block — which builds an onion service by driving Tor's control port — stays off, because the Tor package exposes no control port; the peer interface's onion address comes from StartOS instead and is announced through `server.public-ips`.
 
