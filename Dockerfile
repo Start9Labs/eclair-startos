@@ -9,6 +9,10 @@ RUN apt-get update && \
       wireguard-tools iptables iproute2 procps && \
     rm -rf /var/lib/apt/lists/*
 
+# The JVM trusts its own cacerts, fixed when the JDK was built, not the system store.
+RUN trust extract --overwrite --format=java-cacerts --filter=ca-anchors --purpose=server-auth \
+      "$JAVA_HOME/lib/security/cacerts"
+
 WORKDIR /app
 
 # The release zip is a JVM distribution carrying linux-x86_64 and linux-aarch64
