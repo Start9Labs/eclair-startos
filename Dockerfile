@@ -1,8 +1,8 @@
 FROM eclipse-temurin:21-jre-noble
 
-ARG ECLAIR_VERSION=0.14.4
-ARG ECLAIR_COMMIT=397abfc
-ARG ECLAIR_SHA256=ffdb3858d866539206ed0fbe57b4aa2c266f53e1d52d9372ebd59d7a0bfcb8f0
+ARG ECLAIR_VERSION=0.14.5
+ARG ECLAIR_COMMIT=01384e9
+ARG ECLAIR_SHA256=81e43d4a6bb4818ff002dccb44b5af987cf9ea9622277c812fd6feacafc4d9e6
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends bash ca-certificates curl jq unzip \
