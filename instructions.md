@@ -44,6 +44,10 @@ start-cli package attach eclair -n eclair-sub -- eclair-cli -p <your-password> g
 
 The same interface carries a WebSocket at `/ws` that pushes an event whenever you receive a payment.
 
+### Outbound traffic
+
+If you publish the **Peer** interface through StartTunnel to keep your home IP private, also select that tunnel on Eclair's **Outbound Traffic** tab. Connections Eclair opens itself, to the peers it connects to and opens channels with, otherwise leave through your home router, so those peers see your home IP. If you use the tunnel for another reason, such as a port your router can't forward, there is nothing to change.
+
 ### Actions
 
 - **Set API Password** — generates your API password, and generates a new one whenever you want to cut off everything currently connected. Eclair restarts with the new password, and every client needs it to reconnect.
