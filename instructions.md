@@ -46,7 +46,7 @@ The same interface carries a WebSocket at `/ws` that pushes an event whenever yo
 
 ### Outbound traffic
 
-If you publish the **Peer** interface through StartTunnel to keep your home IP private, also select that tunnel on Eclair's **Outbound Traffic** tab. Connections Eclair opens itself, to the peers it connects to and opens channels with, otherwise leave through your home router, so those peers see your home IP. If you use the tunnel for another reason, such as a port your router can't forward, there is nothing to change.
+If you publish the **Peer** interface through StartTunnel to keep your home IP private, send Eclair's outbound traffic through that tunnel too. Connections Eclair opens itself, to the peers it connects to and opens channels with, otherwise leave through your home router, so those peers see your home IP. If you use the tunnel for another reason, such as a port your router can't forward, there is nothing to change.
 
 ### Actions
 
