@@ -292,9 +292,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       const display = i18n('Node Reachability')
       // The result only changes when main restarts, so check once.
       const gracePeriod = 0
-      const trigger = async function* () {
-        yield
-      }
+      const trigger = sdk.trigger.onceTrigger
 
       // Clearnet addresses eclair cannot announce: reachable on a port other
       // than the one it listens on. Onions are left out — Tor fixes an onion's
