@@ -17,6 +17,7 @@ import {
   callBitcoind,
   dataDir,
   getBitcoindBundle,
+  apiPasswordFile,
   mainMounts,
   isOnion,
   peerPorts,
@@ -31,7 +32,8 @@ import {
   vpnIface,
   vpnUpScript,
 } from './vpn'
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   const bitcoind = await getBitcoindBundle(effects)
@@ -43,6 +45,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
       'No API password set — run the Set API Password action to start Eclair',
     )
   }
+  await mkdir(dirname(apiPasswordFile), { recursive: true })
+  await writeFile(`${apiPasswordFile}.tmp`, conf['api.password'])
+  await rename(`${apiPasswordFile}.tmp`, apiPasswordFile)
 
   // Distinguishes a Peer interface with no external address from one whose
   // addresses eclair cannot announce, and whether a Tor address pins the port.
