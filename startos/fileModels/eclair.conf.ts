@@ -58,7 +58,7 @@ const formNumber = z.number().nullable().catch(null)
 export const shape = z.looseObject({
   // ──── Enforced by the package ────
   chain: z.literal('mainnet').catch('mainnet'),
-  'server.binding-ip': z.literal('0.0.0.0').catch('0.0.0.0'),
+  'server.binding-ip': z.literal('::').catch('::'),
   // Not a fixed literal: eclair announces the port it listens on, so this
   // tracks whichever external port StartOS granted the Peer interface. Settled
   // by setInterfaces, written by watchHosts.
