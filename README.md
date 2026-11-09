@@ -60,7 +60,7 @@ The `main` volume holds everything Eclair writes. Eclair restricts its own data 
 | `/data/startos-store.json`     | StartOS-side state — the JVM heap ceiling and the settled peer port |
 | `/mnt/bitcoin`                 | Bitcoin's volume, mounted read-only for its RPC cookie              |
 
-**Dependents mount `public/api`, never `main`.** The `public` volume (not mounted into Eclair, not backed up) holds `api/password`, which `main` rewrites from `eclair.conf` on every start, so a new password from **Set API Password** reaches dependents when they next start.
+**Dependents should mount `public/api`, not `main`.** The `public` volume (not mounted into Eclair, not backed up) holds `api/password`, which `main` rewrites from `eclair.conf` on every start, so a new password from **Set API Password** reaches dependents using this export when they next start. Eclair does not restrict dependency mounts: any dependent mounting `main` still has access to the seeds and other private files.
 
 The seeds are the node's identity and are never regenerated. On-chain funds are **not** here — they live in a Bitcoin Core wallet (see [Dependencies](#dependencies)).
 
