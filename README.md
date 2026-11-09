@@ -46,7 +46,7 @@ The archive's version and its SHA-256 are build arguments in the `Dockerfile`; t
 
 ## Volume and Data Layout
 
-One volume holds everything Eclair writes. Eclair restricts its own data directory to `rwx------` on every start, because the seeds and the API password live there.
+The `main` volume holds everything Eclair writes. Eclair restricts its own data directory to `rwx------` on every start, because the seeds and the API password live there.
 
 | Path                           | Contents                                                            |
 | ------------------------------ | ------------------------------------------------------------------- |
@@ -59,6 +59,8 @@ One volume holds everything Eclair writes. Eclair restricts its own data directo
 | `/data/mainnet/audit.sqlite`   | Payment and channel history                                         |
 | `/data/startos-store.json`     | StartOS-side state — the JVM heap ceiling and the settled peer port |
 | `/mnt/bitcoin`                 | Bitcoin's volume, mounted read-only for its RPC cookie              |
+
+**Dependents should mount `public/api`, not `main`.** The `public` volume (not mounted into Eclair, not backed up) holds `api/password`, which `main` rewrites from `eclair.conf` on every start, so a new password from **Set API Password** reaches dependents using this export when they next start. Eclair does not restrict dependency mounts: any dependent mounting `main` still has access to the seeds and other private files.
 
 The seeds are the node's identity and are never regenerated. On-chain funds are **not** here — they live in a Bitcoin Core wallet (see [Dependencies](#dependencies)).
 
@@ -215,6 +217,7 @@ architectures: [x86_64, aarch64]
 subcontainers: [eclair-sub]
 volumes:
   main: /data
+  public: (not mounted) # api/password for dependents; not backed up
 file_models:
   - eclair.conf
   - startos-store.json

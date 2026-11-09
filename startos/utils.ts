@@ -33,6 +33,9 @@ export const bitcoindCookie = `${bitcoindMnt}/.cookie`
 /** The Bitcoin Core wallet this package creates and eclair funds channels from. */
 export const bitcoindWallet = 'eclair'
 
+/** Host path of the API password dependents mount as `public/api`. */
+export const apiPasswordFile = '/media/startos/volumes/public/api/password'
+
 export const mainMounts = sdk.Mounts.of().mountVolume({
   volumeId: 'main',
   subpath: null,
