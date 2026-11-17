@@ -39,3 +39,7 @@ verified, tried, and decided belongs in the commit message and the PR body.
   reads. Don't reach for an INI or HOCON writer.
 - **`printToConsole` is read by logback as a JVM system property**, not by Eclair's config parser,
   so it belongs in `JAVA_OPTS` on the daemon. Putting it in `eclair.conf` silently loses the logs.
+- **No field in a task-raisable action may stand for the user's consent or a safety limit** — no
+  "I verified" toggle, no fee cap. StartOS merges a task's input over the whole form, so any
+  installed package can pre-set every field; put the warning in the action's `warning` and the
+  limit in `eclair.conf`, and keep only fields the user reads before submitting.

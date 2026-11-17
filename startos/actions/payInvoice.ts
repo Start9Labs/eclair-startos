@@ -12,12 +12,6 @@ type ParsedInvoice = {
   description?: string
 }
 
-type Review = {
-  invoice: { text: string; decoded: ParsedInvoice } | null
-  presetSafeguard: boolean
-}
-const reviews = new Map<string, Review>()
-
 async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
   const password = await eclairConf.read((c) => c['api.password']).once()
   const parsed = await eclairApi(password)('parseinvoice', { invoice })
@@ -38,25 +32,36 @@ const inputSpec = async ({
   effects: T.Effects
   prefill: unknown | null
 }) => {
-  const preset = (prefill ?? {}) as Record<string, unknown>
   const invoice =
-    typeof preset.invoice === 'string' ? preset.invoice.trim() : null
+    typeof (prefill as { invoice?: unknown } | null)?.invoice === 'string'
+      ? (prefill as { invoice: string }).invoice.trim()
+      : null
   const decoded = invoice ? await decodeInvoice(invoice) : null
-  if (effects.eventId) {
-    reviews.set(effects.eventId, {
-      invoice: invoice && decoded ? { text: invoice, decoded } : null,
-      presetSafeguard: 'confirmed' in preset || 'max-fee-percent' in preset,
-    })
-  }
+  const boundaries = await eclairConf
+    .read((c) => [
+      c['router.path-finding.default.boundaries.max-fee-flat-sat'],
+      c['router.path-finding.default.boundaries.max-fee-proportional-percent'],
+    ])
+    .once()
+  // Eclair's reference.conf defaults; payinvoice applies max(flat, percent of amount).
+  const [flatSat, percent] = [21, 3].map((d, i) =>
+    typeof boundaries?.[i] === 'number' ? (boundaries[i] as number) : d,
+  )
   const details = decoded
     ? decoded.amount === undefined
       ? i18n('Amountless invoice to ${destination}; enter the amount below.', {
           destination: decoded.nodeId,
         })
-      : i18n('Invoice details: ${amount} sats to ${destination}.', {
-          amount: sats(decoded.amount),
-          destination: decoded.nodeId,
-        })
+      : i18n(
+          'Invoice details: ${amount} sats to ${destination}, plus at most ${fee} sats in routing fees.',
+          {
+            amount: sats(decoded.amount),
+            destination: decoded.nodeId,
+            fee: sats(
+              Math.max(flatSat * 1000, (decoded.amount * percent) / 100),
+            ),
+          },
+        )
     : i18n('A Lightning invoice.')
   const description = decoded
     ? `${details} ${i18n('Description')}: ${decoded.description || '-'}`
@@ -99,27 +104,6 @@ const inputSpec = async ({
         },
       }),
     }),
-    'max-fee-percent': Value.number({
-      name: i18n('Maximum fee'),
-      description: i18n(
-        'The most this node may pay in routing fees, as a percentage of the amount.',
-      ),
-      required: true,
-      default: 1,
-      min: 0,
-      max: 100,
-      step: 0.1,
-      integer: false,
-      units: '%',
-      placeholder: null,
-    }),
-    confirmed: Value.toggle({
-      name: i18n('I verified the amount and destination'),
-      description: i18n(
-        'Confirm these details before sending. Lightning payments cannot be reversed.',
-      ),
-      default: false,
-    }),
   })
 }
 
@@ -142,7 +126,9 @@ export const payInvoice = sdk.Action.withInput(
   async ({ effects }) => ({
     name: i18n('Pay Invoice'),
     description: i18n('Pay a Lightning invoice from this node.'),
-    warning: null,
+    warning: i18n(
+      'Lightning payments cannot be reversed. Check the amount and destination under Invoice before sending.',
+    ),
     allowedStatuses: 'only-running',
     group: i18n('Payments'),
     visibility: 'enabled',
@@ -150,33 +136,8 @@ export const payInvoice = sdk.Action.withInput(
   inputSpec,
   async ({ effects }) => ({}),
   async ({ effects, input }): Promise<T.ActionResult & { version: '1' }> => {
-    if (!input.confirmed) {
-      throw new Error(
-        i18n(
-          'Confirm these details before sending. Lightning payments cannot be reversed.',
-        ),
-      )
-    }
     const invoice = input.invoice.trim()
-    const review = effects.eventId ? reviews.get(effects.eventId) : undefined
-    if (effects.eventId) reviews.delete(effects.eventId)
-    // StartOS merges a task's input over the form, so a requesting service could otherwise pre-tick the confirmation or raise the fee cap.
-    if (review?.presetSafeguard) {
-      throw new Error(
-        i18n(
-          'The service that requested this payment pre-set its confirmation or maximum fee, so it was not sent. To pay this invoice, run Pay Invoice yourself and paste it.',
-        ),
-      )
-    }
-    const reviewed = review?.invoice
-    if (reviewed && reviewed.text !== invoice) {
-      throw new Error(
-        i18n(
-          'The invoice changed after review. Reopen the action and verify its details.',
-        ),
-      )
-    }
-    const decoded = reviewed?.decoded ?? (await decodeInvoice(invoice))
+    const decoded = await decodeInvoice(invoice)
     const entered =
       input.amount.selection === 'custom' ? input.amount.value.sats : null
     if (decoded.amount === undefined && entered === null) {
@@ -196,7 +157,6 @@ export const payInvoice = sdk.Action.withInput(
     const password = await eclairConf.read((c) => c['api.password']).once()
     const paid = await eclairApi(password)('payinvoice', {
       invoice,
-      maxFeePct: String(input['max-fee-percent']),
       blocking: 'true',
       ...(entered === null ? {} : { amountMsat: String(entered * 1000) }),
     })

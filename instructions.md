@@ -54,7 +54,7 @@ Publishing the **Peer** interface through StartTunnel controls incoming connecti
 
 - **Set API Password** — generates your API password, and generates a new one whenever you want to cut off everything currently connected. Eclair restarts with the new password, and every client needs it to reconnect.
 - **Node Info** — your node's public key, alias, block height and the URIs peers can reach you at.
-- **Pay Invoice** — pays a Lightning invoice from your node without a wallet app: paste it, enter an amount only if the invoice leaves it open, set the most you are willing to pay in routing fees, and confirm. Verify the decoded amount, destination, and description before sending; payments cannot be reversed. The result shows what was paid and the preimage. A service that needs a payment from you can raise the same prompt with those details disclosed and the invoice locked.
+- **Pay Invoice** — pays a Lightning invoice from your node without a wallet app: paste it and enter an amount only if the invoice leaves it open. Routing fees are capped at 21 sats or 3% of the amount, whichever is more. Verify the decoded amount, destination, and description before sending; payments cannot be reversed. The result shows what was paid and the preimage. A service that needs a payment from you can raise the same prompt with those details disclosed and the invoice locked.
 - **Receive Payment** creates an invoice for someone to pay you: set an amount (or leave it empty to let them choose), a description they will see, and how long it stays payable, then show them the QR code or send them the invoice text. Both live under **Payments**.
 - **General Settings** — your node's name and color, whether new channels are announced to the network, and trampoline relaying. An unannounced node can still send and receive; it just won't be routed through by strangers.
 - **Routing Fees** — what you charge to forward other people's payments.
@@ -68,7 +68,7 @@ Eclair reads its settings only when it starts, so saving any of them restarts Ec
 
 A backup of Eclair captures your node identity, your channels and your payment history. It does not capture your on-chain coins — those are in Bitcoin's wallet, so back up Bitcoin too. After restoring, Eclair rebuilds its map of the network from your peers, and payments will fail to route until it has.
 
-**Never start Eclair from an out-of-date backup.** Every payment changes your channels, so a backup is out of date as soon as the node runs after it was taken. Starting from old channel state can lose the funds in those channels. After a restore, Eclair stays stopped until you run the **Start Restored Node** task: run it only if no other copy of this node is running and nothing ran it after the backup was taken.
+**Never start Eclair from an out-of-date backup.** Every payment changes your channels, so a backup is out of date as soon as the node runs after it was taken. Starting from old channel state can lose the funds in those channels. For backups made with 0.14.6:4 or later, the **Start Restored Node** task keeps Eclair stopped after restoring: run it only if no other copy of this node is running and nothing ran it after the backup was taken. Older backups restore their original package without this safeguard, even if you updated Eclair afterward. Never restore an old backup expecting the updated package to stop it.
 
 ## Limitations
 
