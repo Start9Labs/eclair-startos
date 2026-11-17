@@ -141,7 +141,7 @@ const dict = {
   'Any amount': 139,
   'Payment hash': 140,
   'Amountless invoice to ${destination}; enter the amount below.': 141,
-  'Invoice details: ${amount} sats to ${destination}, plus at most ${fee} sats in routing fees.': 142,
+  'Invoice details: ${amount} sats to ${destination}.': 142,
   'Lightning payments cannot be reversed. Check the amount and destination under Invoice before sending.': 144,
   'Node URI': 146,
   'Start Restored Node': 147,
@@ -155,6 +155,7 @@ const dict = {
   'The most a payment may spend in routing fees, in sats. A payment may spend this or the percentage below, whichever is more.': 145,
   'Maximum Fee Rate': 151,
   'The most a payment may spend in routing fees, as a percentage of the amount. A payment may spend this or the amount above, whichever is more.': 153,
+  'Routing fees are capped at ${flat} sats or ${percent}% of the amount, whichever is more.': 154,
 } as const
 
 /**

@@ -10,6 +10,8 @@ import { sdk } from './sdk'
 
 export const apiPort = 8080
 
+export const paymentFeeDefaults = { flatSat: 21, percent: 3 }
+
 /**
  * Asked of StartOS in this order until one is granted as the Peer interface's
  * external port; see `bindPeerPort` in interfaces.ts. 9735 is the Lightning

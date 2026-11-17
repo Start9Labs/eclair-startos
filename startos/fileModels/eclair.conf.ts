@@ -6,6 +6,7 @@ import {
   bitcoindCookie,
   bitcoindWallet,
   defaultPeerPort,
+  paymentFeeDefaults,
 } from '../utils'
 
 const { InputSpec, Value } = sdk
@@ -336,7 +337,7 @@ export const fullConfigSpec = InputSpec.of({
     min: 0,
     integer: true,
     units: 'sats',
-    footnote: `${i18n('Default')}: 21`,
+    footnote: `${i18n('Default')}: ${paymentFeeDefaults.flatSat}`,
   }),
   'router.path-finding.default.boundaries.max-fee-proportional-percent':
     Value.number({
@@ -351,6 +352,6 @@ export const fullConfigSpec = InputSpec.of({
       step: 0.1,
       integer: false,
       units: '%',
-      footnote: `${i18n('Default')}: 3`,
+      footnote: `${i18n('Default')}: ${paymentFeeDefaults.percent}`,
     }),
 })

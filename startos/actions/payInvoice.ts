@@ -2,6 +2,7 @@ import { T } from '@start9labs/start-sdk'
 import { eclairConf } from '../fileModels/eclair.conf'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
+import { paymentFeeDefaults } from '../utils'
 import { apiError, eclairApi, literal, row, sats } from './payments'
 
 const { InputSpec, Value, Variants } = sdk
@@ -41,29 +42,29 @@ const inputSpec = async ({
     .read((c) => ({
       // Eclair's reference.conf defaults; payinvoice allows the larger of the two.
       flatSat:
-        c['router.path-finding.default.boundaries.max-fee-flat-sat'] ?? 21,
+        c['router.path-finding.default.boundaries.max-fee-flat-sat'] ??
+        paymentFeeDefaults.flatSat,
       percent:
         c[
           'router.path-finding.default.boundaries.max-fee-proportional-percent'
-        ] ?? 3,
+        ] ?? paymentFeeDefaults.percent,
     }))
     .once()
-  const { flatSat, percent } = boundaries ?? { flatSat: 21, percent: 3 }
+  const { flatSat, percent } = boundaries ?? paymentFeeDefaults
+  // Fee policy disclosure must not depend on invoice prefill.
+  const feePolicy = i18n(
+    'Routing fees are capped at ${flat} sats or ${percent}% of the amount, whichever is more.',
+    { flat: String(flatSat), percent: String(percent) },
+  )
   const details = decoded
     ? decoded.amount === undefined
       ? i18n('Amountless invoice to ${destination}; enter the amount below.', {
           destination: decoded.nodeId,
         })
-      : i18n(
-          'Invoice details: ${amount} sats to ${destination}, plus at most ${fee} sats in routing fees.',
-          {
-            amount: sats(decoded.amount),
-            destination: decoded.nodeId,
-            fee: sats(
-              Math.max(flatSat * 1000, (decoded.amount * percent) / 100),
-            ),
-          },
-        )
+      : i18n('Invoice details: ${amount} sats to ${destination}.', {
+          amount: sats(decoded.amount),
+          destination: decoded.nodeId,
+        })
     : i18n('A Lightning invoice.')
   const description = decoded
     ? `${details} ${i18n('Description')}: ${decoded.description || '-'}`
@@ -72,7 +73,7 @@ const inputSpec = async ({
   return InputSpec.of({
     invoice: Value.text({
       name: i18n('Invoice'),
-      description,
+      description: `${description} ${feePolicy}`,
       required: true,
       default: null,
       placeholder: 'lnbc…',
