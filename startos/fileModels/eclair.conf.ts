@@ -119,6 +119,11 @@ export const shape = z.looseObject({
     .enum(['stop', 'unlock', 'ignore'])
     .catch('stop'),
   'trampoline-payments-enable': z.boolean().catch(false),
+
+  // ──── Payments ────
+  'router.path-finding.default.boundaries.max-fee-flat-sat': formNumber,
+  'router.path-finding.default.boundaries.max-fee-proportional-percent':
+    formNumber,
 })
 
 export type EclairConf = z.infer<typeof shape>
@@ -321,4 +326,31 @@ export const fullConfigSpec = InputSpec.of({
       'Relay trampoline payments, letting light wallets that cannot compute a full route pay through your node',
     ),
   }),
+  'router.path-finding.default.boundaries.max-fee-flat-sat': Value.number({
+    name: i18n('Maximum Fee'),
+    description: i18n(
+      'The most a payment may spend in routing fees, in sats. A payment may spend this or the percentage below, whichever is more.',
+    ),
+    required: false,
+    default: null,
+    min: 0,
+    integer: true,
+    units: 'sats',
+    footnote: `${i18n('Default')}: 21`,
+  }),
+  'router.path-finding.default.boundaries.max-fee-proportional-percent':
+    Value.number({
+      name: i18n('Maximum Fee Rate'),
+      description: i18n(
+        'The most a payment may spend in routing fees, as a percentage of the amount. A payment may spend this or the amount above, whichever is more.',
+      ),
+      required: false,
+      default: null,
+      min: 0,
+      max: 100,
+      step: 0.1,
+      integer: false,
+      units: '%',
+      footnote: `${i18n('Default')}: 3`,
+    }),
 })

@@ -4,6 +4,7 @@ import { clearnetVpn } from './clearnetVpn'
 import { channels } from './config/channels'
 import { general } from './config/general'
 import { onChainFees } from './config/onChainFees'
+import { paymentSettings } from './config/paymentSettings'
 import { performance } from './config/performance'
 import { routingFees } from './config/routingFees'
 import { nodeInfo } from './nodeInfo'
@@ -18,6 +19,7 @@ export const actions = sdk.Actions.of()
   .addAction(receivePayment)
   .addAction(general)
   .addAction(routingFees)
+  .addAction(paymentSettings)
   .addAction(onChainFees)
   .addAction(channels)
   .addAction(performance)

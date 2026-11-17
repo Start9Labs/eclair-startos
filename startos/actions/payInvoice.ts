@@ -38,15 +38,17 @@ const inputSpec = async ({
       : null
   const decoded = invoice ? await decodeInvoice(invoice) : null
   const boundaries = await eclairConf
-    .read((c) => [
-      c['router.path-finding.default.boundaries.max-fee-flat-sat'],
-      c['router.path-finding.default.boundaries.max-fee-proportional-percent'],
-    ])
+    .read((c) => ({
+      // Eclair's reference.conf defaults; payinvoice allows the larger of the two.
+      flatSat:
+        c['router.path-finding.default.boundaries.max-fee-flat-sat'] ?? 21,
+      percent:
+        c[
+          'router.path-finding.default.boundaries.max-fee-proportional-percent'
+        ] ?? 3,
+    }))
     .once()
-  // Eclair's reference.conf defaults; payinvoice applies max(flat, percent of amount).
-  const [flatSat, percent] = [21, 3].map((d, i) =>
-    typeof boundaries?.[i] === 'number' ? (boundaries[i] as number) : d,
-  )
+  const { flatSat, percent } = boundaries ?? { flatSat: 21, percent: 3 }
   const details = decoded
     ? decoded.amount === undefined
       ? i18n('Amountless invoice to ${destination}; enter the amount below.', {

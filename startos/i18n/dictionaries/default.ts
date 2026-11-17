@@ -149,6 +149,12 @@ const dict = {
   'Start Eclair only if no other copy of this node is running and nothing ran it after this backup was taken. Eclair broadcasting an out-of-date channel state lets the peer claim the whole channel balance.': 149,
   'This channel database came from a backup. If this node ran anywhere after the backup was taken, its channel state is out of date and starting Eclair can lose the funds in those channels.': 150,
   "Approve this only for a VPN service you installed for Eclair. It sends all of Eclair's clearnet traffic through the WireGuard server in this configuration, and replaces the addresses your node announces with the public address below.": 152,
+  'Payment Settings': 115,
+  'How much this node may pay to send a payment': 116,
+  'Maximum Fee': 143,
+  'The most a payment may spend in routing fees, in sats. A payment may spend this or the percentage below, whichever is more.': 145,
+  'Maximum Fee Rate': 151,
+  'The most a payment may spend in routing fees, as a percentage of the amount. A payment may spend this or the amount above, whichever is more.': 153,
 } as const
 
 /**
