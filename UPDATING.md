@@ -9,8 +9,8 @@ natives for both architectures, so nothing is compiled and there is nothing arch
 
 ## Determining the upstream version
 
-The pin is three `ARG`s at the top of the `Dockerfile`: `ECLAIR_VERSION`, `ECLAIR_COMMIT` and
-`ECLAIR_SHA256`. The release tag is `v<ECLAIR_VERSION>`, and the asset filename embeds a short
+The pin is four `ARG`s at the top of the `Dockerfile`: `ECLAIR_VERSION`, `ECLAIR_COMMIT`,
+`ECLAIR_SHA256` and `ECLAIR_CLI_SHA256`. The release tag is `v<ECLAIR_VERSION>`, and the asset filename embeds a short
 commit hash that changes with every release, so both must be read from the release itself:
 
 ```bash
@@ -25,9 +25,15 @@ the signed `SHA256SUMS.asc` on the same release:
 gh release download -R ACINQ/eclair <tag> -p SHA256SUMS.asc -O - | grep eclair-node
 ```
 
+`eclair-cli` is not a release asset; it is fetched from the tag's tree, so hash that file:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ACINQ/eclair/<tag>/eclair-core/eclair-cli | sha256sum
+```
+
 ## Applying the bump
 
-1. Set the three `ARG`s in the `Dockerfile` to the values above.
+1. Set the four `ARG`s in the `Dockerfile` to the values above.
 2. **Read the upstream release notes for a new Bitcoin Core floor.** Eclair raises its minimum
    Bitcoin Core version fairly often and asserts it at startup, so a bump that misses one leaves
    the package unable to start against a Bitcoin node the dependency range still permits. Raise

@@ -77,7 +77,7 @@ Three groups of keys behave differently, and the difference is what "why did my 
 
 - **Re-asserted on every start, hand edits do not survive.** `chain`, the API and peer bind addresses and ports, `bitcoind.auth`, `bitcoind.cookie`, `bitcoind.wallet`, and `blockchain-watchdog.sources`. Changing any of these by hand breaks the package's contract with StartOS or with Bitcoin, so the model forces them back.
 - **Resolved from dependencies on every start.** `bitcoind.host`, `bitcoind.rpcport`, `bitcoind.zmqblock`, `bitcoind.zmqtx`, `socks5.*` and `server.public-ips`. These are addresses StartOS assigns; editing them by hand is pointless because the next start recomputes them. When Bitcoin is not installed the keys are omitted rather than filled with a placeholder.
-- **Owned by the user through actions, and preserved.** Everything the Configuration actions expose — alias, color, routing fees, on-chain fee policy, channel limits — plus `api.password`. A hand edit to one of these survives, because the model only supplies a default when the key is absent or unparseable. Any key the model does not name is preserved verbatim, so an advanced setting added by hand stays put.
+- **Owned by the user through actions, and preserved.** Everything the Configuration actions expose — alias, color, routing fees, payment fee limits, on-chain fee policy, channel limits — plus `api.password`. A hand edit to one of these survives, because the model only supplies a default when the key is absent or unparseable. Any key the model does not name is preserved verbatim, so an advanced setting added by hand stays put.
 
 `startos-store.json` holds StartOS-side state: the JVM heap ceiling, which has no `eclair.conf` equivalent because it is a `java` argument rather than an Eclair setting, and `peerPort` and `peerOnion`, the port `setInterfaces` settled on and whether a Tor address pinned it (see [Network Access and Interfaces](#network-access-and-interfaces)). `peerPort` is re-verified against the binding on every start, so a hand edit only holds if StartOS also grants that port.
 
@@ -134,17 +134,19 @@ The order the package enforces on every start is: ensure the Bitcoin wallet, wai
 
 ## Actions
 
-Every action but one is user-facing. The Configuration group writes `eclair.conf`, which Eclair reads only at startup; main watches the file, so a change restarts a running Eclair to apply it.
+Every action but two is user-facing. The Configuration group writes `eclair.conf`, which Eclair reads only at startup; main watches the file, so a change restarts a running Eclair to apply it.
 
 **Set API Password** (`set-api-password`) — Run it once on install, and again whenever you want to revoke access. It rewrites `api.password` in `eclair.conf` and returns the new password, which is shown only then; nothing stores a recoverable copy. It is instant and safe to repeat, but each run invalidates the previous password, so every connected client has to be updated. Eclair reads the password at startup, so a rotation restarts a running Eclair. The action's name changes to "Rotate API Password" once one is set, and from then on it asks for confirmation before replacing the password.
 
 **Node Info** (`node-info`) — Reads the node's public key, alias, connectable URIs and processed block height from the running node. Read-only, instant, repeatable. Use it to get the URI a peer needs to open a channel with you; each URI is its own copyable field with a QR code, and the list reads None until the peer interface has a public address.
 
-**Pay Invoice** (`pay-invoice`) — Grouped under Payments. Pays a BOLT11 invoice from the node's own funds: paste the invoice, whether its amount is stated in it or entered here — an invoice that leaves the amount open requires one, one that states it refuses one — and the most it may spend in routing fees as a percentage. Every payment requires confirmation that the amount and destination were verified. A task-prefilled invoice is decoded before the prompt opens, displays its amount, destination, and description, and cannot be edited; execution rejects an invoice that differs from the reviewed one. It then pays through the API's blocking `payinvoice` and returns the amount, fee, description, destination and preimage; a failure returns Eclair's reason. Only while running. Not idempotent — running it twice pays twice if the invoice allows it, which a single-use BOLT11 does not. A companion service can raise it as a task with the invoice filled in, so a payment it needs is one reviewed prompt; the node never hands out its API password for it.
+**Pay Invoice** (`pay-invoice`) — Grouped under Payments. Pays a BOLT11 invoice from the node's own funds: paste the invoice, and enter an amount only if the invoice leaves it open — one that states its amount refuses another. Routing fees are capped by Eclair's path-finding boundaries, which **Payment Settings** sets (21 sats or 3%, whichever is more, by default); every form displays the configured fee policy and has no fee field. A task-prefilled invoice is decoded before the prompt opens, displays its amount, destination and description, and cannot be edited. Execution decodes the submitted invoice again and pays it through the API's blocking `payinvoice`, returning the amount, fee, description, destination and preimage; a failure returns Eclair's reason. Only while running. Not idempotent — running it twice pays twice if the invoice allows it, which a single-use BOLT11 does not. A companion service can raise it as a task with the invoice filled in, so a payment it needs is one reviewed prompt; the node never hands out its API password for it. StartOS merges a task's input over the whole form, so a requester can pre-set any field; the only fields are the invoice and an amount, both shown before submitting, and the irreversibility warning is the action's `warning`, which no task can change.
 
 **Receive Payment** (`receive-payment`) — Creates a BOLT11 invoice for this node: an optional amount (none makes an amount-less invoice the payer fills in), an optional description carried in the invoice, and an expiry in hours, default 24. Calls the API's `createinvoice` and returns the invoice as text and QR code, plus the payment hash. Only while running. Safe to repeat — each run registers a new invoice and nothing is charged. Grouped with Pay Invoice under Payments.
 
 **General Settings** (`general`) — Alias, color, whether new channels are announced, and trampoline relaying. Announcing is what makes your node routable by strangers; turning it off leaves existing announced channels announced. Instant, repeatable, restarts Eclair.
+
+**Payment Settings** (`payment-settings`) — The most an outgoing payment may spend in routing fees: a flat amount in sats and a percentage of the amount, of which a payment may spend whichever is more. Writes `router.path-finding.default.boundaries.max-fee-flat-sat` and `.max-fee-proportional-percent`; cleared fields fall back to Eclair's defaults of 21 sats and 3%. Applies to Pay Invoice and to every payment sent through the API without its own limit. Instant, repeatable, restarts Eclair.
 
 **Routing Fees** (`routing-fees`) — What you charge to forward payments, separately for announced and unannounced channels. Eclair applies a fee change to existing channels when it restarts. Instant, repeatable, restarts Eclair.
 
@@ -154,17 +156,21 @@ Every action but one is user-facing. The Configuration group writes `eclair.conf
 
 **Clearnet VPN** (`clearnet-vpn`) — Hidden, and raised as a task by a companion package with its tunnel configuration and public address filled in. Its only known uses are the TunnelSats community package and running it by hand with some other WireGuard configuration, which is unsupported. It is not how a node is made reachable or routed: inbound reachability comes from addresses on the node's StartOS interfaces, and outbound traffic leaves through the gateway StartOS selects for it. It stores the configuration and the address, resolves the public address's host to the IP `server.public-ips` takes, and sets `peerPort` to the address's port — Eclair announces one port for every address, so it has to listen on the provider's port; `bindPeerPort` binds it and inside the tunnel the provider's forward to 9735 is redirected to it. Costs a restart. A new configuration replaces the tunnel; an empty one turns it off, but leaves the port where it settled. Safe to repeat.
 
+**Start Restored Node** (`acknowledge-restore`) — Hidden; reached only through the critical task a restore raises. It does nothing but clear that task, which is what lets Eclair start on the restored channel database. Its warning states the condition for running it: no other copy of the node is running, and nothing ran the node after the backup was taken.
+
 **Performance** (`performance`) — The JVM heap ceiling. Raise it if Eclair stops with an out-of-memory error, which is the failure mode of a node that has grown more channels than the current ceiling supports. Instant, repeatable, restarts Eclair.
 
 ## Tasks
 
-The package raises two tasks, one on itself and one on Bitcoin; a companion package can raise a third on it.
+The package can raise three tasks, two on itself and one on Bitcoin; a companion package can also raise tasks on Eclair.
 
 **Set the API password** — Raised on Eclair whenever `api.password` in `eclair.conf` is empty, which on a fresh install is immediately. Severity `critical`, so Eclair will not start and its ordinary controls are replaced by the prompt. Running **Set API Password** clears it. It returns only if the password is emptied by hand.
 
 **Configure Bitcoin** — Raised on **Bitcoin**, not on Eclair, and it appears on Bitcoin's page with no indication of which package asked for it. It targets Bitcoin's own hidden `autoconfig` action and asks for ZeroMQ enabled, the transaction index enabled, and pruning off. Severity `critical`. Approving the pre-filled form on Bitcoin clears it; it returns whenever Bitcoin's configuration drifts away from those three values. On a pruned node, satisfying it means a full resync, because the transaction index cannot be built without one.
 
-**Clearnet VPN** — Raised on Eclair only by a companion package, with the tunnel configuration and public address filled in. Severity `important`. Cleared when the stored configuration matches what the companion package proposes; it returns when that package issues a new one.
+**Start Restored Node** — Raised by this version's restore hook. Severity `critical`, so the restored Eclair stays stopped until the user runs **Start Restored Node**, which clears it. It does not return. Backups made before 0.14.6:4 restore their earlier package version without this task.
+
+**Clearnet VPN** — Raised on Eclair by a companion package, with the tunnel configuration and public address filled in. StartOS lets any installed package raise it; the action's warning states what approving it changes, and the task list names the package that asked. Severity `important`. Cleared when the stored configuration matches what the companion package proposes; it returns when that package issues a new one.
 
 ## Health Checks
 
@@ -192,6 +198,10 @@ The strategy is a whole-volume copy of `main`. StartOS stops the service before 
 
 Excluded: `network.sqlite` and its write-ahead files, which hold the gossip graph Eclair re-downloads from its peers, and the log files. Everything else is captured, including both seeds, the channel database and the audit history.
 
+**Restoring an out-of-date channel database can lose channel funds.** Every payment or forward advances channel state, so a backup is stale as soon as the node runs after it. A stale node that broadcasts its own commitment — on a force close, including one triggered by an HTLC that expired while the backup sat on disk — publishes a revoked state, and the peer can claim the whole channel balance. Restore therefore raises a critical task (see [Tasks](#tasks)) that keeps Eclair stopped until the user confirms no other copy of the node is running and nothing ran it after the backup.
+
+**This gate does not protect existing backups.** A restore reinstalls the package version saved in the backup. Backups made before 0.14.6:4 have no confirmation gate, even if the live node was updated afterward; never restore stale channel state expecting this version to stop it.
+
 A restored instance rebuilds the gossip graph on its own, which takes a while and makes payments fail to route until it is populated. It needs Bitcoin installed and synced before it will start. A node that had a Tor address keeps its peer port for it, even where the new server cannot grant that port — see [Network Access and Interfaces](#network-access-and-interfaces).
 
 **On-chain funds are not in this backup.** They live in the `eclair` wallet inside Bitcoin's data directory, and Bitcoin's own backup is what captures them. Restoring Eclair alone onto a server whose Bitcoin node does not carry that wallet brings back the channels without the coins that funded them.
@@ -201,7 +211,7 @@ A restored instance rebuilds the gossip graph on its own, which takes a while an
 1. **No web interface.** Eclair has never had one. The API is the only surface, and no dashboard on StartOS currently drives it.
 2. **Mainnet only.** The chain is fixed; testnet, signet and regtest are not selectable.
 3. **The blockchain watchdog is disabled.** Upstream polls bitcoinheaders.net, blockcypher.com, blockstream.info and mempool.space to detect an eclipsed Bitcoin node. The package sends that list empty, so nothing leaves the server uninvited, and that cross-check is not performed.
-4. **Eclair does not manage its own on-chain keys.** Upstream supports holding the keys itself and giving Bitcoin a watch-only wallet. The package uses the ordinary arrangement instead, in which Bitcoin owns the keys — which is what makes the backup caveat above apply.
+4. **Eclair does not manage its own on-chain keys.** Upstream supports holding the keys itself and giving Bitcoin a watch-only wallet. The package uses the ordinary arrangement instead, in which Bitcoin owns the keys — which is what makes the backup caveat above apply. The `eclair` wallet is unencrypted, and Bitcoin's RPC serves every wallet to every caller, so any service holding Bitcoin's RPC cookie or mounting its data volume can spend from it or read the wallet file.
 5. **SQLite only.** Upstream's PostgreSQL backend, and the `eclair-front` clustering it enables, are not packaged.
 6. **Plugins are not supported.** There is no path for placing a plugin jar where Eclair would load it.
 7. **Bitcoin must be unpruned and transaction-indexed**, which is a substantially larger disk commitment than a pruned node.
@@ -235,14 +245,17 @@ actions:
   - receive-payment # only-running
   - general
   - routing-fees
+  - payment-settings
   - on-chain-fees
   - channels
   - performance
   - clearnet-vpn # hidden; raised as a task by a companion package
+  - acknowledge-restore # hidden; raised as a critical task on restore
 tasks:
   - { action: set-api-password, severity: critical }
   - { action: bitcoind/autoconfig, severity: critical }
   - { action: clearnet-vpn, severity: important } # only when a companion package raises it
+  - { action: acknowledge-restore, severity: critical } # on restore
 health_checks:
   - eclair
   - reachability # declared only while the node is unreachable from outside

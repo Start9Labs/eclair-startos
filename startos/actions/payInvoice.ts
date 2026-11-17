@@ -2,6 +2,7 @@ import { T } from '@start9labs/start-sdk'
 import { eclairConf } from '../fileModels/eclair.conf'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
+import { paymentFeeDefaults } from '../utils'
 import { apiError, eclairApi, literal, row, sats } from './payments'
 
 const { InputSpec, Value, Variants } = sdk
@@ -11,9 +12,6 @@ type ParsedInvoice = {
   nodeId: string
   description?: string
 }
-
-type ReviewedInvoice = { invoice: string; decoded: ParsedInvoice }
-const reviewedInvoices = new Map<string, ReviewedInvoice>()
 
 async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
   const password = await eclairConf.read((c) => c['api.password']).once()
@@ -40,9 +38,23 @@ const inputSpec = async ({
       ? (prefill as { invoice: string }).invoice.trim()
       : null
   const decoded = invoice ? await decodeInvoice(invoice) : null
-  if (invoice && decoded && effects.eventId) {
-    reviewedInvoices.set(effects.eventId, { invoice, decoded })
-  }
+  const boundaries = await eclairConf
+    .read((c) => ({
+      flatSat:
+        c['router.path-finding.default.boundaries.max-fee-flat-sat'] ??
+        paymentFeeDefaults.flatSat,
+      percent:
+        c[
+          'router.path-finding.default.boundaries.max-fee-proportional-percent'
+        ] ?? paymentFeeDefaults.percent,
+    }))
+    .once()
+  const { flatSat, percent } = boundaries ?? paymentFeeDefaults
+  // Fee policy disclosure must not depend on invoice prefill.
+  const feePolicy = i18n(
+    'Routing fees are capped at ${flat} sats or ${percent}% of the amount, whichever is more.',
+    { flat: String(flatSat), percent: String(percent) },
+  )
   const details = decoded
     ? decoded.amount === undefined
       ? i18n('Amountless invoice to ${destination}; enter the amount below.', {
@@ -60,7 +72,7 @@ const inputSpec = async ({
   return InputSpec.of({
     invoice: Value.text({
       name: i18n('Invoice'),
-      description,
+      description: `${description} ${feePolicy}`,
       required: true,
       default: null,
       placeholder: 'lnbc…',
@@ -94,27 +106,6 @@ const inputSpec = async ({
         },
       }),
     }),
-    'max-fee-percent': Value.number({
-      name: i18n('Maximum fee'),
-      description: i18n(
-        'The most this node may pay in routing fees, as a percentage of the amount.',
-      ),
-      required: true,
-      default: 1,
-      min: 0,
-      max: 100,
-      step: 0.1,
-      integer: false,
-      units: '%',
-      placeholder: null,
-    }),
-    confirmed: Value.toggle({
-      name: i18n('I verified the amount and destination'),
-      description: i18n(
-        'Confirm these details before sending. Lightning payments cannot be reversed.',
-      ),
-      default: false,
-    }),
   })
 }
 
@@ -137,7 +128,9 @@ export const payInvoice = sdk.Action.withInput(
   async ({ effects }) => ({
     name: i18n('Pay Invoice'),
     description: i18n('Pay a Lightning invoice from this node.'),
-    warning: null,
+    warning: i18n(
+      'Lightning payments cannot be reversed. Check the amount and destination under Invoice before sending.',
+    ),
     allowedStatuses: 'only-running',
     group: i18n('Payments'),
     visibility: 'enabled',
@@ -145,26 +138,8 @@ export const payInvoice = sdk.Action.withInput(
   inputSpec,
   async ({ effects }) => ({}),
   async ({ effects, input }): Promise<T.ActionResult & { version: '1' }> => {
-    if (!input.confirmed) {
-      throw new Error(
-        i18n(
-          'Confirm these details before sending. Lightning payments cannot be reversed.',
-        ),
-      )
-    }
     const invoice = input.invoice.trim()
-    const reviewed = effects.eventId
-      ? reviewedInvoices.get(effects.eventId)
-      : undefined
-    if (effects.eventId) reviewedInvoices.delete(effects.eventId)
-    if (reviewed && reviewed.invoice !== invoice) {
-      throw new Error(
-        i18n(
-          'The invoice changed after review. Reopen the action and verify its details.',
-        ),
-      )
-    }
-    const decoded = reviewed?.decoded ?? (await decodeInvoice(invoice))
+    const decoded = await decodeInvoice(invoice)
     const entered =
       input.amount.selection === 'custom' ? input.amount.value.sats : null
     if (decoded.amount === undefined && entered === null) {
@@ -184,7 +159,6 @@ export const payInvoice = sdk.Action.withInput(
     const password = await eclairConf.read((c) => c['api.password']).once()
     const paid = await eclairApi(password)('payinvoice', {
       invoice,
-      maxFeePct: String(input['max-fee-percent']),
       blocking: 'true',
       ...(entered === null ? {} : { amountMsat: String(entered * 1000) }),
     })

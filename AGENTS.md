@@ -39,3 +39,5 @@ verified, tried, and decided belongs in the commit message and the PR body.
   reads. Don't reach for an INI or HOCON writer.
 - **`printToConsole` is read by logback as a JVM system property**, not by Eclair's config parser,
   so it belongs in `JAVA_OPTS` on the daemon. Putting it in `eclair.conf` silently loses the logs.
+- **Do not add consent or fee-limit fields to Pay Invoice** — StartOS lets task callers pre-set
+  every form field. Keep persistent fee configuration in Payment Settings.

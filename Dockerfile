@@ -3,6 +3,7 @@ FROM eclipse-temurin:21-jre-noble
 ARG ECLAIR_VERSION=0.14.6
 ARG ECLAIR_COMMIT=50e046e
 ARG ECLAIR_SHA256=898fa274bb1fc7d673005a4d171f0a14512c33107dd6adc2c6e123ec1b7cf007
+ARG ECLAIR_CLI_SHA256=001947a0e58683ebbf9542002fa9711960e5baa0e88d26068ef03be5394fb5e6
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends bash ca-certificates curl jq unzip \
@@ -27,4 +28,5 @@ RUN curl -fsSL -o eclair-node.zip \
 
 RUN curl -fsSL -o /usr/local/bin/eclair-cli \
       "https://raw.githubusercontent.com/ACINQ/eclair/v${ECLAIR_VERSION}/eclair-core/eclair-cli" && \
+    echo "${ECLAIR_CLI_SHA256}  /usr/local/bin/eclair-cli" | sha256sum -c - && \
     chmod +x /usr/local/bin/eclair-cli

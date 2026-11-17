@@ -1,7 +1,7 @@
 import { apiPort } from '../utils'
 
 export const sats = (msat: number | undefined) =>
-  msat === undefined ? '' : String(Math.floor(msat / 1000))
+  msat === undefined ? '' : String(msat / 1000)
 
 export const literal = (text: string) => text.replace(/\$/g, '$$$$')
 
