@@ -12,8 +12,11 @@ type ParsedInvoice = {
   description?: string
 }
 
-type ReviewedInvoice = { invoice: string; decoded: ParsedInvoice }
-const reviewedInvoices = new Map<string, ReviewedInvoice>()
+type Review = {
+  invoice: { text: string; decoded: ParsedInvoice } | null
+  presetSafeguard: boolean
+}
+const reviews = new Map<string, Review>()
 
 async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
   const password = await eclairConf.read((c) => c['api.password']).once()
@@ -35,13 +38,15 @@ const inputSpec = async ({
   effects: T.Effects
   prefill: unknown | null
 }) => {
+  const preset = (prefill ?? {}) as Record<string, unknown>
   const invoice =
-    typeof (prefill as { invoice?: unknown } | null)?.invoice === 'string'
-      ? (prefill as { invoice: string }).invoice.trim()
-      : null
+    typeof preset.invoice === 'string' ? preset.invoice.trim() : null
   const decoded = invoice ? await decodeInvoice(invoice) : null
-  if (invoice && decoded && effects.eventId) {
-    reviewedInvoices.set(effects.eventId, { invoice, decoded })
+  if (effects.eventId) {
+    reviews.set(effects.eventId, {
+      invoice: invoice && decoded ? { text: invoice, decoded } : null,
+      presetSafeguard: 'confirmed' in preset || 'max-fee-percent' in preset,
+    })
   }
   const details = decoded
     ? decoded.amount === undefined
@@ -153,11 +158,18 @@ export const payInvoice = sdk.Action.withInput(
       )
     }
     const invoice = input.invoice.trim()
-    const reviewed = effects.eventId
-      ? reviewedInvoices.get(effects.eventId)
-      : undefined
-    if (effects.eventId) reviewedInvoices.delete(effects.eventId)
-    if (reviewed && reviewed.invoice !== invoice) {
+    const review = effects.eventId ? reviews.get(effects.eventId) : undefined
+    if (effects.eventId) reviews.delete(effects.eventId)
+    // StartOS merges a task's input over the form, so a requesting service could otherwise pre-tick the confirmation or raise the fee cap.
+    if (review?.presetSafeguard) {
+      throw new Error(
+        i18n(
+          'The service that requested this payment pre-set its confirmation or maximum fee, so it was not sent. To pay this invoice, run Pay Invoice yourself and paste it.',
+        ),
+      )
+    }
+    const reviewed = review?.invoice
+    if (reviewed && reviewed.text !== invoice) {
       throw new Error(
         i18n(
           'The invoice changed after review. Reopen the action and verify its details.',

@@ -13,7 +13,7 @@ A full Lightning routing node. Eclair opens payment channels, forwards other peo
 
 Eclair has no screen of its own. Everything you do with it goes through its **API** interface, either from a client that speaks it or from the `eclair-cli` command line tool. The **Peer** interface is how other Lightning nodes reach you to open channels.
 
-Your on-chain money lives in your Bitcoin service, not here. Eclair opens channels by spending from a wallet called `eclair` that it creates inside Bitcoin, and channels you close pay back into that same wallet. Back up Bitcoin as well as Eclair, or you will restore your channels without the coins behind them.
+Your on-chain money lives in your Bitcoin service, not here. Eclair opens channels by spending from a wallet called `eclair` that it creates inside Bitcoin, and channels you close pay back into that same wallet. Back up Bitcoin as well as Eclair, or you will restore your channels without the coins behind them. Any other service you give access to your Bitcoin node can also spend from that wallet, so install alongside Bitcoin only services you trust with those coins.
 
 ## Getting set up
 
@@ -39,8 +39,10 @@ Connect to the **API** interface with an **empty username** and your API passwor
 From a terminal, `eclair-cli` is bundled in the service:
 
 ```
-start-cli package attach eclair -n eclair-sub -- eclair-cli -p <your-password> getinfo
+start-cli package attach eclair -n eclair-sub -- eclair-cli getinfo
 ```
+
+It asks for your API password. Don't pass it with `-p`, which leaves it in your shell history.
 
 The same interface carries a WebSocket at `/ws` that pushes an event whenever you receive a payment.
 
@@ -65,6 +67,8 @@ Eclair reads its settings only when it starts, so saving any of them restarts Ec
 ### Backups
 
 A backup of Eclair captures your node identity, your channels and your payment history. It does not capture your on-chain coins — those are in Bitcoin's wallet, so back up Bitcoin too. After restoring, Eclair rebuilds its map of the network from your peers, and payments will fail to route until it has.
+
+**Never start Eclair from an out-of-date backup.** Every payment changes your channels, so a backup is out of date as soon as the node runs after it was taken. Starting from old channel state can lose the funds in those channels. After a restore, Eclair stays stopped until you run the **Start Restored Node** task: run it only if no other copy of this node is running and nothing ran it after the backup was taken.
 
 ## Limitations
 

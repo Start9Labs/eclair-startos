@@ -101,7 +101,7 @@ const dict = {
   'The WireGuard client configuration for the tunnel. Leave it empty to turn the VPN off.': 97,
   'Public Address': 98,
   'The address peers reach this node at through the tunnel, as host:port. Eclair listens on that port and announces it.': 99,
-  'Unrecognized line in the WireGuard configuration: ${line}': 100,
+  'Line ${line} of the WireGuard configuration is not recognized.': 100,
   'The WireGuard configuration needs a PrivateKey and an Address under [Interface].': 101,
   'The WireGuard configuration needs exactly one [Peer] with a PublicKey and an Endpoint.': 102,
   'AllowedIPs must include 0.0.0.0/0 so that all clearnet traffic uses the tunnel.': 103,
@@ -148,6 +148,12 @@ const dict = {
   'Confirm these details before sending. Lightning payments cannot be reversed.': 144,
   'The invoice changed after review. Reopen the action and verify its details.': 145,
   'Node URI': 146,
+  'Start Restored Node': 147,
+  'Confirm that this backup holds the latest state of your channels.': 148,
+  'Start Eclair only if no other copy of this node is running and nothing ran it after this backup was taken. Eclair broadcasting an out-of-date channel state lets the peer claim the whole channel balance.': 149,
+  'This channel database came from a backup. If this node ran anywhere after the backup was taken, its channel state is out of date and starting Eclair can lose the funds in those channels.': 150,
+  'The service that requested this payment pre-set its confirmation or maximum fee, so it was not sent. To pay this invoice, run Pay Invoice yourself and paste it.': 151,
+  "Approve this only for a VPN service you installed for Eclair. It sends all of Eclair's clearnet traffic through the WireGuard server in this configuration, and replaces the addresses your node announces with the public address below.": 152,
 } as const
 
 /**

@@ -36,7 +36,9 @@ export const clearnetVpn = sdk.Action.withInput(
     description: i18n(
       "Route this node's clearnet traffic through a WireGuard tunnel and advertise the tunnel's public address.",
     ),
-    warning: null,
+    warning: i18n(
+      "Approve this only for a VPN service you installed for Eclair. It sends all of Eclair's clearnet traffic through the WireGuard server in this configuration, and replaces the addresses your node announces with the public address below.",
+    ),
     allowedStatuses: 'any',
     group: null,
     visibility: 'hidden',
@@ -55,9 +57,12 @@ export const clearnetVpn = sdk.Action.withInput(
     if ('error' in parsed) {
       throw new Error(
         parsed.error === 'line'
-          ? i18n('Unrecognized line in the WireGuard configuration: ${line}', {
-              line: parsed.line,
-            })
+          ? i18n(
+              'Line ${line} of the WireGuard configuration is not recognized.',
+              {
+                line: String(parsed.line),
+              },
+            )
           : parsed.error === 'interface'
             ? i18n(
                 'The WireGuard configuration needs a PrivateKey and an Address under [Interface].',

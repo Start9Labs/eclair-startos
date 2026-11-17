@@ -1,4 +1,5 @@
 import { sdk } from '../sdk'
+import { acknowledgeRestore } from './acknowledgeRestore'
 import { clearnetVpn } from './clearnetVpn'
 import { channels } from './config/channels'
 import { general } from './config/general'
@@ -21,3 +22,4 @@ export const actions = sdk.Actions.of()
   .addAction(channels)
   .addAction(performance)
   .addAction(clearnetVpn)
+  .addAction(acknowledgeRestore)
