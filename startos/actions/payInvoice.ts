@@ -40,7 +40,6 @@ const inputSpec = async ({
   const decoded = invoice ? await decodeInvoice(invoice) : null
   const boundaries = await eclairConf
     .read((c) => ({
-      // Eclair's reference.conf defaults; payinvoice allows the larger of the two.
       flatSat:
         c['router.path-finding.default.boundaries.max-fee-flat-sat'] ??
         paymentFeeDefaults.flatSat,

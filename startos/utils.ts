@@ -10,6 +10,7 @@ import { sdk } from './sdk'
 
 export const apiPort = 8080
 
+/** Eclair's reference.conf path-finding boundaries; a payment may spend the larger of the two. */
 export const paymentFeeDefaults = { flatSat: 21, percent: 3 }
 
 /**
