@@ -185,7 +185,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
           `-Declair.datadir=${dataDir}`,
         ],
         env: {
-          JAVA_OPTS: `-Xmx${maxHeapMib}m -Declair.printToConsole=true`,
+          JAVA_OPTS: `-Xmx${maxHeapMib}m -Declair.printToConsole=true -XX:-UseBASE64Intrinsics`,
         },
       },
       ready: {

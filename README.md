@@ -44,6 +44,8 @@ The package runs a single subcontainer, `eclair-sub`, which holds the JVM proces
 
 The archive's version and its SHA-256 are build arguments in the `Dockerfile`; the checksum is verified during the build, so a mismatched or truncated download fails the build rather than shipping.
 
+The JVM runs with `-XX:-UseBASE64Intrinsics` in `JAVA_OPTS` to mitigate Java4Shell (CVE-2026-114938) on eligible x86-64 CPUs with AVX-512 VBMI. ARM64 is unaffected.
+
 ## Volume and Data Layout
 
 The `main` volume holds everything Eclair writes. Eclair restricts its own data directory to `rwx------` on every start, because the seeds and the API password live there.
