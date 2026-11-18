@@ -60,7 +60,7 @@ The `main` volume holds everything Eclair writes. Eclair restricts its own data 
 | `/data/mainnet/network.sqlite` | The gossip graph                                                    |
 | `/data/mainnet/audit.sqlite`   | Payment and channel history                                         |
 | `/data/startos-store.json`     | StartOS-side state — the JVM heap ceiling and the settled peer port |
-| `/mnt/bitcoin`                 | Bitcoin's volume, mounted read-only for its RPC cookie              |
+| `/mnt/bitcoin`                 | Bitcoin's `public` volume, mounted read-only for its RPC cookie     |
 
 **Dependents should mount `public/api`, not `main`.** The `public` volume (not mounted into Eclair, not backed up) holds `api/password`, which `main` rewrites from `eclair.conf` on every start, so a new password from **Set API Password** reaches dependents using this export when they next start. Eclair does not restrict dependency mounts: any dependent mounting `main` still has access to the seeds and other private files.
 
@@ -87,11 +87,11 @@ Three groups of keys behave differently, and the difference is what "why did my 
 
 Eclair requires Bitcoin and cannot run without it. Bitcoin supplies the chain data Eclair watches, the fee estimates it uses, and the wallet its channels are funded from.
 
-| Dependency | Required | Health checks awaited       | Mount                                      |
-| ---------- | -------- | --------------------------- | ------------------------------------------ |
-| `bitcoind` | Yes      | `bitcoind`, `sync-progress` | `main` volume at `/mnt/bitcoin`, read-only |
+| Dependency | Required | Health checks awaited       | Mount                                 |
+| ---------- | -------- | --------------------------- | ------------------------------------- |
+| `bitcoind` | Yes      | `bitcoind`, `sync-progress` | `public` at `/mnt/bitcoin`, read-only |
 
-The mount exists so Eclair can read Bitcoin's RPC cookie; the package uses cookie authentication rather than an RPC user and password. Eclair reads the cookie once at startup, so the package restarts Eclair when Bitcoin writes a new one. An absent cookie is treated as Bitcoin being down rather than as the cookie being removed, which keeps Eclair from being restarted while its backend is already gone.
+The mount exists so Eclair can read Bitcoin's RPC cookie, and it holds nothing else of Bitcoin's; the package uses cookie authentication rather than an RPC user and password. Eclair reads the cookie once at startup, so the package restarts Eclair when Bitcoin writes a new one. An absent cookie is treated as Bitcoin being down rather than as the cookie being removed, which keeps Eclair from being restarted while its backend is already gone.
 
 Bitcoin must be configured a particular way, and the package raises a task on Bitcoin to do it — see [Tasks](#tasks). The transaction index is a hard requirement rather than a recommendation: Eclair fetches transactions by id with no block hash, including one at startup that is not in any wallet, so a node without the index fails to start. The index in turn requires an unpruned node.
 

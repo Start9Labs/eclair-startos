@@ -1,5 +1,6 @@
 import { FileHelper } from '@start9labs/start-sdk'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
+import { rpcVolumeId } from 'bitcoin-core-startos/startos/utils'
 import { createHash } from 'node:crypto'
 import { eclairConf } from './fileModels/eclair.conf'
 import { storeJson } from './fileModels/store.json'
@@ -83,7 +84,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
     { imageId: 'eclair' },
     mainMounts.mountDependency<typeof bitcoinManifest>({
       dependencyId: 'bitcoind',
-      volumeId: 'main',
+      volumeId: rpcVolumeId,
       mountpoint: bitcoindMnt,
       subpath: null,
       readonly: true,
