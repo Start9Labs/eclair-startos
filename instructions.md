@@ -15,8 +15,6 @@ Eclair has no screen of its own. Everything you do with it goes through its **AP
 
 Your on-chain money lives in your Bitcoin service, not here. Eclair opens channels by spending from a wallet called `eclair` that it creates inside Bitcoin, and channels you close pay back into that same wallet. Back up Bitcoin as well as Eclair, or you will restore your channels without the coins behind them. Any other service you give access to your Bitcoin node can also spend from that wallet, so install alongside Bitcoin only services you trust with those coins.
 
-The package disables the JVM Base64 intrinsic to mitigate CVE-2026-114938 (Java4Shell) on affected x86 CPUs. ARM64 is unaffected. No Eclair-specific exploitability has been established; your heap setting, logs, and node configuration are unchanged.
-
 ## Getting set up
 
 1. Install Bitcoin and wait for it to finish syncing. This takes days on a fresh node.
