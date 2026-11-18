@@ -44,6 +44,8 @@ The package runs a single subcontainer, `eclair-sub`, which holds the JVM proces
 
 The archive's version and its SHA-256 are build arguments in the `Dockerfile`; the checksum is verified during the build, so a mismatched or truncated download fails the build rather than shipping.
 
+The package must keep HotSpot’s Base64 intrinsic disabled with `-XX:-UseBASE64Intrinsics` appended to `JAVA_OPTS` to mitigate CVE-2026-114938 (Java4Shell) on affected x86 CPUs. Keep the configured heap ceiling and `-Declair.printToConsole=true`; do not move the mitigation into `eclair.conf`. ARM64 is unaffected by this CVE and accepts the same flag. No Eclair-specific exploitability has been established. A rebuild of the floating Temurin base alone is not proof of a vendor security fix.
+
 ## Volume and Data Layout
 
 The `main` volume holds everything Eclair writes. Eclair restricts its own data directory to `rwx------` on every start, because the seeds and the API password live there.
@@ -261,3 +263,15 @@ health_checks:
   - reachability # declared only while the node is unreachable from outside
   - vpn-tunnel # displayed "Clearnet VPN"; only while a tunnel is configured; last-handshake age
 ```
+
+## JVM mitigation regression check
+
+Run through `helix-build` after `npm install` (Docker binfmt support required for arm64 on an x86 host):
+
+```sh
+docker build --platform linux/amd64 --load -t helix/eclair-jvm-security:amd64 .
+docker build --platform linux/arm64 --load -t helix/eclair-jvm-security:arm64 .
+node --test tests/jvm-options.test.cjs
+```
+
+The test captures the production daemon command/environment with default and custom heap ceilings, then runs the packaged `eclair-node.sh` and actual Temurin JVM on both architectures. `PrintFlagsFinal` checks the effective disabled intrinsic and heap; JVM properties check console logging and the data directory. JVM `--dry-run` loads the main class without running Eclair, so no Bitcoin, channel state, or network is needed. This is not an application-readiness test or verification of a previously published package's floating JVM base. `ECLAIR_JVM_IMAGE_AMD64` and `ECLAIR_JVM_IMAGE_ARM64` can select images built from the same Dockerfile.
