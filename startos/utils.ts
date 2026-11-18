@@ -1,5 +1,6 @@
 import { T } from '@start9labs/start-sdk'
 import {
+  rpcCookieName,
   rpcHostId as btcRpcHostId,
   rpcPort as btcRpcPort,
   zmqHostId as btcZmqHostId,
@@ -31,7 +32,7 @@ export const peerInterfaceId = 'peer'
 export const dataDir = '/data'
 export const chainDir = `${dataDir}/mainnet`
 export const bitcoindMnt = '/mnt/bitcoin'
-export const bitcoindCookie = `${bitcoindMnt}/.cookie`
+export const bitcoindCookie = `${bitcoindMnt}/${rpcCookieName}`
 
 /** The Bitcoin Core wallet this package creates and eclair funds channels from. */
 export const bitcoindWallet = 'eclair'

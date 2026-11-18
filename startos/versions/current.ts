@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '0.14.6:4',
+  version: '0.14.6:5',
   releaseNotes: {
     en_US:
-      'Mitigates Java4Shell (CVE-2026-114938) on affected x86-64 servers. Requires StartOS 0.4.2 or later. New backups require confirmation of the latest channel state before Eclair starts after restore; existing backups restore their original package without this gate. Pay Invoice no longer has a fee field or confirmation toggle: the fee limit is set in the new Payment Settings action and shown before you pay.',
+      "Requires StartOS 0.4.2 or later. Update Bitcoin first: Eclair can now read only Bitcoin's RPC credential, not its data directory or wallets.",
     es_ES:
-      'Mitiga Java4Shell (CVE-2026-114938) en los servidores x86-64 afectados. Requiere StartOS 0.4.2 o posterior. Las nuevas copias de seguridad requieren confirmar el estado más reciente de los canales antes de iniciar Eclair tras restaurarlas; las copias existentes restauran su paquete original sin esta protección. Pagar factura ya no tiene campo de comisión ni casilla de confirmación: el límite de comisión se ajusta en la nueva acción Ajustes de pagos y se muestra antes de pagar.',
+      'Requiere StartOS 0.4.2 o posterior. Actualiza Bitcoin primero: Eclair ahora solo puede leer la credencial RPC de Bitcoin, no su directorio de datos ni sus billeteras.',
     de_DE:
-      'Entschärft Java4Shell (CVE-2026-114938) auf betroffenen x86-64-Servern. Erfordert StartOS 0.4.2 oder neuer. Neue Backups erfordern nach der Wiederherstellung die Bestätigung des neuesten Kanalzustands, bevor Eclair startet; bestehende Backups stellen ihr ursprüngliches Paket ohne diese Sperre wieder her. Rechnung bezahlen hat kein Gebührenfeld und keinen Bestätigungsschalter mehr: das Gebührenlimit wird in der neuen Aktion Zahlungseinstellungen festgelegt und vor dem Bezahlen angezeigt.',
+      'Erfordert StartOS 0.4.2 oder neuer. Aktualisiere zuerst Bitcoin: Eclair kann jetzt nur noch die RPC-Zugangsdaten von Bitcoin lesen, nicht sein Datenverzeichnis oder seine Wallets.',
     pl_PL:
-      'Ogranicza podatność Java4Shell (CVE-2026-114938) na podatnych serwerach x86-64. Wymaga StartOS 0.4.2 lub nowszego. Nowe kopie zapasowe wymagają potwierdzenia najnowszego stanu kanałów przed uruchomieniem Eclair po przywróceniu; istniejące kopie przywracają swój oryginalny pakiet bez tej blokady. Zapłać fakturę nie ma już pola opłaty ani przełącznika potwierdzenia: limit opłat ustawia się w nowej akcji Ustawienia płatności i jest pokazywany przed zapłatą.',
+      'Wymaga StartOS 0.4.2 lub nowszego. Najpierw zaktualizuj Bitcoin: Eclair może teraz odczytać tylko poświadczenie RPC Bitcoina, a nie jego katalog danych ani portfele.',
     fr_FR:
-      'Atténue Java4Shell (CVE-2026-114938) sur les serveurs x86-64 concernés. Nécessite StartOS 0.4.2 ou une version ultérieure. Les nouvelles sauvegardes exigent la confirmation du dernier état des canaux avant de démarrer Eclair après restauration ; les sauvegardes existantes restaurent leur paquet d’origine sans ce blocage. Payer une facture n’a plus de champ de frais ni de case de confirmation : la limite de frais se règle dans la nouvelle action Paramètres de paiement et s’affiche avant le paiement.',
+      "Nécessite StartOS 0.4.2 ou une version ultérieure. Mettez d'abord Bitcoin à jour : Eclair ne peut désormais lire que l'identifiant RPC de Bitcoin, et non son répertoire de données ni ses portefeuilles.",
   },
   migrations: {
     up: async ({ effects }) => {},

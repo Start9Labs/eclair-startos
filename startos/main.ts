@@ -1,5 +1,6 @@
 import { FileHelper } from '@start9labs/start-sdk'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
+import { rpcSubpath } from 'bitcoin-core-startos/startos/utils'
 import { createHash } from 'node:crypto'
 import { eclairConf } from './fileModels/eclair.conf'
 import { storeJson } from './fileModels/store.json'
@@ -85,7 +86,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       dependencyId: 'bitcoind',
       volumeId: 'main',
       mountpoint: bitcoindMnt,
-      subpath: null,
+      subpath: rpcSubpath,
       readonly: true,
     }),
     'eclair-sub',
