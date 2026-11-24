@@ -8,6 +8,7 @@ import {
   decodeInvoice,
   eclairApi,
   literal,
+  multilineRow,
   row,
   sats,
 } from './payments'
@@ -176,7 +177,7 @@ export const payInvoice = sdk.Action.withInput(
         value: [
           row(i18n('Amount'), `${amount} sats`, false),
           row(i18n('Fee'), `${fee} sats`, false),
-          row(i18n('Description'), decoded.description || '-', false),
+          multilineRow(i18n('Description'), decoded.description || '-'),
           row(i18n('Destination'), destination, true),
           row(i18n('Preimage'), result.paymentPreimage ?? '', true),
         ],

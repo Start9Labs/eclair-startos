@@ -30,6 +30,17 @@ export function apiError(text: string): string {
   }
 }
 
+export const multilineRow = (name: string, value: string) => ({
+  name,
+  description: null,
+  copyable: false,
+  qr: false,
+  masked: false,
+  type: 'multiline' as const,
+  value,
+  filename: null,
+})
+
 export const row = (
   name: string,
   value: string,
