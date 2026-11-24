@@ -168,6 +168,8 @@ export default {
     163: 'Caduca',
     164: 'Red',
     165: 'Fuera del intervalo de fechas admitido',
+    166: 'Pago pendiente',
+    167: 'El pago de ${amount} sats a ${destination} no tiene un resultado final confirmado y aún puede completarse. No pague una factura de reemplazo. Vuelva a ejecutar Pagar factura con la misma factura para ver su resultado final.',
   },
   de_DE: {
     0: 'API',
@@ -336,6 +338,8 @@ export default {
     163: 'Läuft ab',
     164: 'Netzwerk',
     165: 'Außerhalb des unterstützten Datumsbereichs',
+    166: 'Zahlung ausstehend',
+    167: 'Für die Zahlung von ${amount} Sats an ${destination} liegt kein bestätigtes Endergebnis vor, und sie kann noch abgeschlossen werden. Bezahlen Sie keine Ersatzrechnung. Führen Sie „Rechnung bezahlen“ mit derselben Rechnung erneut aus, um das endgültige Ergebnis zu sehen.',
   },
   pl_PL: {
     0: 'API',
@@ -504,6 +508,8 @@ export default {
     163: 'Wygasa',
     164: 'Sieć',
     165: 'Poza obsługiwanym zakresem dat',
+    166: 'Płatność w toku',
+    167: 'Płatność ${amount} satów do ${destination} nie ma potwierdzonego wyniku końcowego i nadal może się zakończyć. Nie płać faktury zastępczej. Uruchom ponownie Zapłać fakturę z tą samą fakturą, aby zobaczyć jej ostateczny wynik.',
   },
   fr_FR: {
     0: 'API',
@@ -672,5 +678,7 @@ export default {
     163: 'Expire',
     164: 'Réseau',
     165: 'Au-delà de la plage de dates prise en charge',
+    166: 'Paiement en attente',
+    167: 'Le paiement de ${amount} sats à ${destination} n’a pas de résultat final confirmé et peut encore aboutir. Ne payez pas de facture de remplacement. Relancez Payer une facture avec la même facture pour voir son résultat final.',
   },
 } satisfies Record<string, LangDict>

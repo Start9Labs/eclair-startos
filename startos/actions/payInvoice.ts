@@ -110,6 +110,25 @@ type PaymentResult = {
   }[]
 }
 
+// One getsentinfo entry per payment part; `sent` carries the preimage and fees.
+type SentInfo = {
+  recipientAmount?: number
+  recipientNodeId?: string
+  status?: {
+    type?: 'pending' | 'failed' | 'sent'
+    paymentPreimage?: string
+    feesPaid?: number
+  }
+}
+
+const parseJson = <T>(text: string): T | null => {
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    return null
+  }
+}
+
 export const payInvoice = sdk.Action.withInput(
   'pay-invoice',
   async ({ effects }) => ({
@@ -144,19 +163,60 @@ export const payInvoice = sdk.Action.withInput(
     }
 
     const password = await eclairConf.read((c) => c['api.password']).once()
-    const paid = await eclairApi(password)('payinvoice', {
+    const api = eclairApi(password)
+    const paid = await api('payinvoice', {
       invoice,
       blocking: 'true',
       ...(entered === null ? {} : { amountMsat: String(entered * 1000) }),
-    })
-    const result: PaymentResult | null = paid.ok ? JSON.parse(paid.text) : null
+    }).catch(() => null)
+    let result = paid?.ok ? parseJson<PaymentResult>(paid.text) : null
+    if (result?.type !== 'payment-sent' && result?.type !== 'payment-failed') {
+      // An API error or a cut-off request does not establish failure; only an empty record after an error does.
+      const info = await api('getsentinfo', {
+        paymentHash: decoded.paymentHash,
+      }).catch(() => null)
+      const parts = info?.ok ? parseJson<SentInfo[]>(info.text) : null
+      const sent = parts?.filter((part) => part.status?.type === 'sent') ?? []
+      if (sent.length) {
+        result = {
+          type: 'payment-sent',
+          paymentPreimage: sent[0].status?.paymentPreimage,
+          recipientAmount: sent[0].recipientAmount,
+          recipientNodeId: sent[0].recipientNodeId,
+          parts: sent.map((part) => ({ feesPaid: part.status?.feesPaid ?? 0 })),
+        }
+      } else if (
+        !(
+          paid &&
+          !paid.ok &&
+          Array.isArray(parts) &&
+          parts.every((part) => part.status?.type === 'failed')
+        )
+      ) {
+        return {
+          version: '1' as const,
+          title: i18n('Payment pending'),
+          message: i18n(
+            'The payment of ${amount} sats to ${destination} has no confirmed final result and can still complete. Do not pay a replacement invoice. Run Pay Invoice again with the same invoice to see its final result.',
+            {
+              amount: sats(entered === null ? decoded.amount : entered * 1000),
+              destination: decoded.nodeId,
+            },
+          ),
+          result: {
+            type: 'group' as const,
+            value: [row(i18n('Payment hash'), decoded.paymentHash, true)],
+          },
+        }
+      }
+    }
     if (result?.type !== 'payment-sent') {
       const reason = result?.failures?.length
         ? result.failures
             .map((f) => f.t ?? f.failureMessage ?? f.failureType?.name ?? '')
             .filter(Boolean)
             .join('; ')
-        : apiError(paid.text)
+        : apiError(paid?.text ?? '')
       throw new Error(
         i18n('Payment failed: ${reason}', { reason: literal(reason) }),
       )
