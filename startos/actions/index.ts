@@ -7,6 +7,7 @@ import { onChainFees } from './config/onChainFees'
 import { paymentSettings } from './config/paymentSettings'
 import { performance } from './config/performance'
 import { routingFees } from './config/routingFees'
+import { decodeInvoiceAction } from './decodeInvoice'
 import { nodeInfo } from './nodeInfo'
 import { payInvoice } from './payInvoice'
 import { receivePayment } from './receivePayment'
@@ -15,6 +16,7 @@ import { setApiPassword } from './setApiPassword'
 export const actions = sdk.Actions.of()
   .addAction(setApiPassword)
   .addAction(nodeInfo)
+  .addAction(decodeInvoiceAction)
   .addAction(payInvoice)
   .addAction(receivePayment)
   .addAction(general)

@@ -3,28 +3,18 @@ import { eclairConf } from '../fileModels/eclair.conf'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 import { paymentFeeDefaults } from '../utils'
-import { apiError, eclairApi, literal, row, sats } from './payments'
+import {
+  apiError,
+  decodeInvoice,
+  eclairApi,
+  literal,
+  multilineRow,
+  normalizeInvoice,
+  row,
+  sats,
+} from './payments'
 
 const { InputSpec, Value, Variants } = sdk
-
-type ParsedInvoice = {
-  amount?: number
-  nodeId: string
-  description?: string
-}
-
-async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
-  const password = await eclairConf.read((c) => c['api.password']).once()
-  const parsed = await eclairApi(password)('parseinvoice', { invoice })
-  if (!parsed.ok) {
-    throw new Error(
-      i18n('The invoice could not be decoded: ${error}', {
-        error: literal(apiError(parsed.text)),
-      }),
-    )
-  }
-  return JSON.parse(parsed.text) as ParsedInvoice
-}
 
 const inputSpec = async ({
   effects,
@@ -35,7 +25,7 @@ const inputSpec = async ({
 }) => {
   const invoice =
     typeof (prefill as { invoice?: unknown } | null)?.invoice === 'string'
-      ? (prefill as { invoice: string }).invoice.trim()
+      ? normalizeInvoice((prefill as { invoice: string }).invoice)
       : null
   const decoded = invoice ? await decodeInvoice(invoice) : null
   const boundaries = await eclairConf
@@ -65,14 +55,11 @@ const inputSpec = async ({
           destination: decoded.nodeId,
         })
     : i18n('A Lightning invoice.')
-  const description = decoded
-    ? `${details} ${i18n('Description')}: ${decoded.description || '-'}`
-    : details
 
   return InputSpec.of({
     invoice: Value.text({
       name: i18n('Invoice'),
-      description: `${description} ${feePolicy}`,
+      description: `${details} ${feePolicy}`,
       required: true,
       default: null,
       placeholder: 'lnbc…',
@@ -129,7 +116,7 @@ export const payInvoice = sdk.Action.withInput(
     name: i18n('Pay Invoice'),
     description: i18n('Pay a Lightning invoice from this node.'),
     warning: i18n(
-      'Lightning payments cannot be reversed. Check the amount and destination under Invoice before sending.',
+      'Lightning payments cannot be reversed. Eclair pays the destination an invoice names and the amount it states, so check an invoice first with Decode Invoice.',
     ),
     allowedStatuses: 'only-running',
     group: i18n('Payments'),
@@ -138,7 +125,7 @@ export const payInvoice = sdk.Action.withInput(
   inputSpec,
   async ({ effects }) => ({}),
   async ({ effects, input }): Promise<T.ActionResult & { version: '1' }> => {
-    const invoice = input.invoice.trim()
+    const invoice = normalizeInvoice(input.invoice)
     const decoded = await decodeInvoice(invoice)
     const entered =
       input.amount.selection === 'custom' ? input.amount.value.sats : null
@@ -191,7 +178,7 @@ export const payInvoice = sdk.Action.withInput(
         value: [
           row(i18n('Amount'), `${amount} sats`, false),
           row(i18n('Fee'), `${fee} sats`, false),
-          row(i18n('Description'), decoded.description || '-', false),
+          multilineRow(i18n('Description'), decoded.description || '-'),
           row(i18n('Destination'), destination, true),
           row(i18n('Preimage'), result.paymentPreimage ?? '', true),
         ],
@@ -199,5 +186,3 @@ export const payInvoice = sdk.Action.withInput(
     }
   },
 )
-
-// Eclair's API answers an error with a JSON `error` field; anything else is passed through.

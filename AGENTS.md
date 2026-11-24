@@ -43,3 +43,6 @@ verified, tried, and decided belongs in the commit message and the PR body.
   that fixes CVE-2026-114938** — a rebuild of the floating Temurin tag does not show which JDK it got.
 - **Do not add consent or fee-limit fields to Pay Invoice** — StartOS lets task callers pre-set
   every form field. Keep persistent fee configuration in Payment Settings.
+- **Keep the invoice's own description out of Pay Invoice's form hint; Decode Invoice and the payment
+  result show it** — the payee writes it, so beside the decoded amount and destination it can pass for
+  payment details.
