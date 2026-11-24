@@ -102,6 +102,8 @@ type PaymentResult = {
   recipientAmount?: number
   recipientNodeId?: string
   parts?: { feesPaid: number }[]
+  // Display fees only after all parts settle.
+  feesPending?: boolean
   // A local failure carries its reason as `t`; a remote one as `failureMessage`.
   failures?: {
     t?: string
@@ -126,6 +128,22 @@ const parseJson = <T>(text: string): T | null => {
     return JSON.parse(text) as T
   } catch {
     return null
+  }
+}
+
+const allPartsFailed = (parts: SentInfo[] | null) =>
+  parts?.every((part) => part.status?.type === 'failed') ?? false
+
+const sentPayment = (parts: SentInfo[] | null): PaymentResult | null => {
+  const sent = parts?.filter((part) => part.status?.type === 'sent') ?? []
+  if (!sent.length) return null
+  return {
+    type: 'payment-sent',
+    paymentPreimage: sent[0].status?.paymentPreimage,
+    recipientAmount: sent[0].recipientAmount,
+    recipientNodeId: sent[0].recipientNodeId,
+    parts: sent.map((part) => ({ feesPaid: part.status?.feesPaid ?? 0 })),
+    feesPending: parts?.some((part) => part.status?.type === 'pending'),
   }
 }
 
@@ -164,50 +182,55 @@ export const payInvoice = sdk.Action.withInput(
 
     const password = await eclairConf.read((c) => c['api.password']).once()
     const api = eclairApi(password)
-    const paid = await api('payinvoice', {
-      invoice,
-      blocking: 'true',
-      ...(entered === null ? {} : { amountMsat: String(entered * 1000) }),
-    }).catch(() => null)
-    let result = paid?.ok ? parseJson<PaymentResult>(paid.text) : null
-    if (result?.type !== 'payment-sent' && result?.type !== 'payment-failed') {
-      // An API error or a cut-off request does not establish failure; only an empty record after an error does.
+    const getSentInfo = async () => {
       const info = await api('getsentinfo', {
         paymentHash: decoded.paymentHash,
       }).catch(() => null)
       const parts = info?.ok ? parseJson<SentInfo[]>(info.text) : null
-      const sent = parts?.filter((part) => part.status?.type === 'sent') ?? []
-      if (sent.length) {
-        result = {
-          type: 'payment-sent',
-          paymentPreimage: sent[0].status?.paymentPreimage,
-          recipientAmount: sent[0].recipientAmount,
-          recipientNodeId: sent[0].recipientNodeId,
-          parts: sent.map((part) => ({ feesPaid: part.status?.feesPaid ?? 0 })),
+      return Array.isArray(parts) ? parts : null
+    }
+    const before = await getSentInfo()
+    let paid: Awaited<ReturnType<typeof api>> | null = null
+    let result = sentPayment(before)
+    // Never resubmit a payment whose recorded outcome is sent, pending, or unknown.
+    if (allPartsFailed(before)) {
+      paid = await api('payinvoice', {
+        invoice,
+        blocking: 'true',
+        ...(entered === null ? {} : { amountMsat: String(entered * 1000) }),
+      }).catch(() => null)
+      result = paid?.ok ? parseJson<PaymentResult>(paid.text) : null
+      if (result?.type !== 'payment-sent') {
+        const after = await getSentInfo()
+        const sent = sentPayment(after)
+        // Failure of one attempt does not settle other attempts sharing its hash.
+        if (sent) {
+          result = sent
+        } else if (
+          allPartsFailed(after) &&
+          (result?.type === 'payment-failed' || (paid && !paid.ok))
+        ) {
+          result = { type: 'payment-failed', failures: result?.failures }
+        } else {
+          result = null
         }
-      } else if (
-        !(
-          paid &&
-          !paid.ok &&
-          Array.isArray(parts) &&
-          parts.every((part) => part.status?.type === 'failed')
-        )
-      ) {
-        return {
-          version: '1' as const,
-          title: i18n('Payment pending'),
-          message: i18n(
-            'The payment of ${amount} sats to ${destination} has no confirmed final result and can still complete. Do not pay a replacement invoice. Run Pay Invoice again with the same invoice to see its final result.',
-            {
-              amount: sats(entered === null ? decoded.amount : entered * 1000),
-              destination: decoded.nodeId,
-            },
-          ),
-          result: {
-            type: 'group' as const,
-            value: [row(i18n('Payment hash'), decoded.paymentHash, true)],
+      }
+    }
+    if (!result) {
+      return {
+        version: '1' as const,
+        title: i18n('Payment pending'),
+        message: i18n(
+          'The payment of ${amount} sats to ${destination} has no confirmed final result and can still complete. Do not pay a replacement invoice. Run Pay Invoice again with the same invoice to see its final result.',
+          {
+            amount: sats(entered === null ? decoded.amount : entered * 1000),
+            destination: decoded.nodeId,
           },
-        }
+        ),
+        result: {
+          type: 'group' as const,
+          value: [row(i18n('Payment hash'), decoded.paymentHash, true)],
+        },
       }
     }
     if (result?.type !== 'payment-sent') {
@@ -237,7 +260,9 @@ export const payInvoice = sdk.Action.withInput(
         type: 'group' as const,
         value: [
           row(i18n('Amount'), `${amount} sats`, false),
-          row(i18n('Fee'), `${fee} sats`, false),
+          ...(result.feesPending
+            ? []
+            : [row(i18n('Fee'), `${fee} sats`, false)]),
           multilineRow(i18n('Description'), decoded.description || '-'),
           row(i18n('Destination'), destination, true),
           row(i18n('Preimage'), result.paymentPreimage ?? '', true),
