@@ -167,6 +167,7 @@ export default {
     162: 'Creada',
     163: 'Caduca',
     164: 'Red',
+    165: 'Fuera del intervalo de fechas admitido',
   },
   de_DE: {
     0: 'API',
@@ -334,6 +335,7 @@ export default {
     162: 'Erstellt',
     163: 'Läuft ab',
     164: 'Netzwerk',
+    165: 'Außerhalb des unterstützten Datumsbereichs',
   },
   pl_PL: {
     0: 'API',
@@ -501,6 +503,7 @@ export default {
     162: 'Utworzona',
     163: 'Wygasa',
     164: 'Sieć',
+    165: 'Poza obsługiwanym zakresem dat',
   },
   fr_FR: {
     0: 'API',
@@ -668,5 +671,6 @@ export default {
     162: 'Créée',
     163: 'Expire',
     164: 'Réseau',
+    165: 'Au-delà de la plage de dates prise en charge',
   },
 } satisfies Record<string, LangDict>
