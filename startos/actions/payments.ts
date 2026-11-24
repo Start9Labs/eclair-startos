@@ -68,6 +68,10 @@ export type ParsedInvoice = {
   amount?: number
 }
 
+// Wallets and QR codes often add a `lightning:` URI scheme, which eclair rejects.
+export const normalizeInvoice = (invoice: string) =>
+  invoice.trim().replace(/^lightning:/i, '')
+
 export async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
   const password = await eclairConf.read((c) => c['api.password']).once()
   const parsed = await eclairApi(password)('parseinvoice', { invoice })

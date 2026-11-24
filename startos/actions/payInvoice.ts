@@ -9,6 +9,7 @@ import {
   eclairApi,
   literal,
   multilineRow,
+  normalizeInvoice,
   row,
   sats,
 } from './payments'
@@ -24,7 +25,7 @@ const inputSpec = async ({
 }) => {
   const invoice =
     typeof (prefill as { invoice?: unknown } | null)?.invoice === 'string'
-      ? (prefill as { invoice: string }).invoice.trim()
+      ? normalizeInvoice((prefill as { invoice: string }).invoice)
       : null
   const decoded = invoice ? await decodeInvoice(invoice) : null
   const boundaries = await eclairConf
@@ -124,7 +125,7 @@ export const payInvoice = sdk.Action.withInput(
   inputSpec,
   async ({ effects }) => ({}),
   async ({ effects, input }): Promise<T.ActionResult & { version: '1' }> => {
-    const invoice = input.invoice.trim()
+    const invoice = normalizeInvoice(input.invoice)
     const decoded = await decodeInvoice(invoice)
     const entered =
       input.amount.selection === 'custom' ? input.amount.value.sats : null

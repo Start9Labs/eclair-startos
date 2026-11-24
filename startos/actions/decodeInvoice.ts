@@ -1,7 +1,7 @@
 import { T } from '@start9labs/start-sdk'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { decodeInvoice, multilineRow, row } from './payments'
+import { decodeInvoice, multilineRow, normalizeInvoice, row } from './payments'
 
 const { InputSpec, Value } = sdk
 
@@ -45,7 +45,7 @@ export const decodeInvoiceAction = sdk.Action.withInput(
   inputSpec,
   async ({ effects }) => ({}),
   async ({ effects, input }): Promise<T.ActionResult & { version: '1' }> => {
-    const decoded = await decodeInvoice(input.invoice.trim())
+    const decoded = await decodeInvoice(normalizeInvoice(input.invoice))
     const expires = decoded.timestamp + (decoded.expiry ?? 3600)
     return {
       version: '1' as const,
