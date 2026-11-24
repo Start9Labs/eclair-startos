@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '0.14.6:5',
+  version: '0.14.6:6',
   releaseNotes: {
     en_US:
-      "Requires StartOS 0.4.2 or later. Update Bitcoin first: Eclair can now read only Bitcoin's RPC credential, not its data directory or wallets.",
+      "A payment prompt from another service shows only the invoice's amount and destination; the description appears in the result after paying.",
     es_ES:
-      'Requiere StartOS 0.4.2 o posterior. Actualiza Bitcoin primero: Eclair ahora solo puede leer la credencial RPC de Bitcoin, no su directorio de datos ni sus billeteras.',
+      'Una solicitud de pago de otro servicio muestra solo el importe y el destino de la factura; la descripción aparece en el resultado tras pagar.',
     de_DE:
-      'Erfordert StartOS 0.4.2 oder neuer. Aktualisiere zuerst Bitcoin: Eclair kann jetzt nur noch die RPC-Zugangsdaten von Bitcoin lesen, nicht sein Datenverzeichnis oder seine Wallets.',
+      'Eine Zahlungsaufforderung eines anderen Dienstes zeigt nur Betrag und Ziel der Rechnung; die Beschreibung erscheint nach der Zahlung im Ergebnis.',
     pl_PL:
-      'Wymaga StartOS 0.4.2 lub nowszego. Najpierw zaktualizuj Bitcoin: Eclair może teraz odczytać tylko poświadczenie RPC Bitcoina, a nie jego katalog danych ani portfele.',
+      'Prośba o płatność od innej usługi pokazuje tylko kwotę i miejsce docelowe faktury; opis pojawia się w wyniku po zapłacie.',
     fr_FR:
-      "Nécessite StartOS 0.4.2 ou une version ultérieure. Mettez d'abord Bitcoin à jour : Eclair ne peut désormais lire que l'identifiant RPC de Bitcoin, et non son répertoire de données ni ses portefeuilles.",
+      'Une demande de paiement d’un autre service n’affiche que le montant et la destination de la facture ; la description apparaît dans le résultat après le paiement.',
   },
   migrations: {
     up: async ({ effects }) => {},

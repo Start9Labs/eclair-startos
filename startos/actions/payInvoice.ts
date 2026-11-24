@@ -65,14 +65,11 @@ const inputSpec = async ({
           destination: decoded.nodeId,
         })
     : i18n('A Lightning invoice.')
-  const description = decoded
-    ? `${details} ${i18n('Description')}: ${decoded.description || '-'}`
-    : details
 
   return InputSpec.of({
     invoice: Value.text({
       name: i18n('Invoice'),
-      description: `${description} ${feePolicy}`,
+      description: `${details} ${feePolicy}`,
       required: true,
       default: null,
       placeholder: 'lnbc…',
@@ -129,7 +126,7 @@ export const payInvoice = sdk.Action.withInput(
     name: i18n('Pay Invoice'),
     description: i18n('Pay a Lightning invoice from this node.'),
     warning: i18n(
-      'Lightning payments cannot be reversed. Check the amount and destination under Invoice before sending.',
+      'Lightning payments cannot be reversed. Pay only an invoice you trust: Eclair pays the destination it names and the amount it states.',
     ),
     allowedStatuses: 'only-running',
     group: i18n('Payments'),

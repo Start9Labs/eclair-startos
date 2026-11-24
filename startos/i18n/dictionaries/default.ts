@@ -142,7 +142,7 @@ const dict = {
   'Payment hash': 140,
   'Amountless invoice to ${destination}; enter the amount below.': 141,
   'Invoice details: ${amount} sats to ${destination}.': 142,
-  'Lightning payments cannot be reversed. Check the amount and destination under Invoice before sending.': 144,
+  'Lightning payments cannot be reversed. Pay only an invoice you trust: Eclair pays the destination it names and the amount it states.': 144,
   'Node URI': 146,
   'Start Restored Node': 147,
   'Confirm that this backup holds the latest state of your channels.': 148,
