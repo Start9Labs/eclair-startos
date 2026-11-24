@@ -1,3 +1,5 @@
+import { eclairConf } from '../fileModels/eclair.conf'
+import { i18n } from '../i18n'
 import { apiPort } from '../utils'
 
 export const sats = (msat: number | undefined) =>
@@ -19,6 +21,7 @@ export const eclairApi =
     return { ok: res.ok, text: await res.text() }
   }
 
+// Eclair's API answers an error with a JSON `error` field; anything else is passed through.
 export function apiError(text: string): string {
   try {
     return String(JSON.parse(text).error ?? text).replace(/\s+/g, ' ')
@@ -42,3 +45,27 @@ export const row = (
   type: 'single' as const,
   value,
 })
+
+export type ParsedInvoice = {
+  prefix: string
+  timestamp: number
+  nodeId: string
+  description?: string
+  descriptionHash?: string
+  paymentHash: string
+  expiry?: number
+  amount?: number
+}
+
+export async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
+  const password = await eclairConf.read((c) => c['api.password']).once()
+  const parsed = await eclairApi(password)('parseinvoice', { invoice })
+  if (!parsed.ok) {
+    throw new Error(
+      i18n('The invoice could not be decoded: ${error}', {
+        error: literal(apiError(parsed.text)),
+      }),
+    )
+  }
+  return JSON.parse(parsed.text) as ParsedInvoice
+}

@@ -3,28 +3,16 @@ import { eclairConf } from '../fileModels/eclair.conf'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 import { paymentFeeDefaults } from '../utils'
-import { apiError, eclairApi, literal, row, sats } from './payments'
+import {
+  apiError,
+  decodeInvoice,
+  eclairApi,
+  literal,
+  row,
+  sats,
+} from './payments'
 
 const { InputSpec, Value, Variants } = sdk
-
-type ParsedInvoice = {
-  amount?: number
-  nodeId: string
-  description?: string
-}
-
-async function decodeInvoice(invoice: string): Promise<ParsedInvoice> {
-  const password = await eclairConf.read((c) => c['api.password']).once()
-  const parsed = await eclairApi(password)('parseinvoice', { invoice })
-  if (!parsed.ok) {
-    throw new Error(
-      i18n('The invoice could not be decoded: ${error}', {
-        error: literal(apiError(parsed.text)),
-      }),
-    )
-  }
-  return JSON.parse(parsed.text) as ParsedInvoice
-}
 
 const inputSpec = async ({
   effects,
@@ -126,7 +114,7 @@ export const payInvoice = sdk.Action.withInput(
     name: i18n('Pay Invoice'),
     description: i18n('Pay a Lightning invoice from this node.'),
     warning: i18n(
-      'Lightning payments cannot be reversed. Pay only an invoice you trust: Eclair pays the destination it names and the amount it states.',
+      'Lightning payments cannot be reversed. Eclair pays the destination an invoice names and the amount it states, so check an invoice first with Decode Invoice.',
     ),
     allowedStatuses: 'only-running',
     group: i18n('Payments'),
@@ -196,5 +184,3 @@ export const payInvoice = sdk.Action.withInput(
     }
   },
 )
-
-// Eclair's API answers an error with a JSON `error` field; anything else is passed through.

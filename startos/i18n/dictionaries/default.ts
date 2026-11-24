@@ -142,7 +142,7 @@ const dict = {
   'Payment hash': 140,
   'Amountless invoice to ${destination}; enter the amount below.': 141,
   'Invoice details: ${amount} sats to ${destination}.': 142,
-  'Lightning payments cannot be reversed. Pay only an invoice you trust: Eclair pays the destination it names and the amount it states.': 144,
+  'Lightning payments cannot be reversed. Eclair pays the destination an invoice names and the amount it states, so check an invoice first with Decode Invoice.': 144,
   'Node URI': 146,
   'Start Restored Node': 147,
   'Confirm that this backup holds the latest state of your channels.': 148,
@@ -156,6 +156,18 @@ const dict = {
   'Maximum Fee Rate': 151,
   'The most a payment may spend in routing fees, as a percentage of the amount. A payment may spend this or the amount above, whichever is more.': 153,
   'Routing fees are capped at ${flat} sats or ${percent}% of the amount, whichever is more.': 154,
+
+  // actions/decodeInvoice.ts
+  'Decode Invoice': 155,
+  'Show what a Lightning invoice asks for before you pay it. Nothing is paid.': 156,
+  'Amountless: you enter the amount when you pay': 157,
+  'Invoice decoded': 158,
+  'This invoice expired on ${date}. It can no longer be paid.': 159,
+  'Nothing has been paid. Check these details before you pay.': 160,
+  'Description hash': 161,
+  Created: 162,
+  Expires: 163,
+  Network: 164,
 } as const
 
 /**
